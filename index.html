@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#f6d5ae" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#283462" media="(prefers-color-scheme: dark)" />
+<!-- Apply the saved day/night choice before first paint, so the page never flashes. -->
+<script>try{var s=localStorage.getItem('archipelago-sky');if(s==='day'||s==='night')document.documentElement.setAttribute('data-sky',s);}catch(e){}</script>
+
+<title>Muhammad Memon &mdash; Statistics &amp; Machine Learning</title>
+<meta name="description" content="Portfolio of Muhammad Memon, a Statistical Science student at the University of Toronto building machine-learning tools. Sail between islands to explore projects, experience and his resume." />
+<meta name="author" content="Muhammad Memon" />
+
+<!-- Icons -->
+<link rel="icon" href="favicon.ico" sizes="32x32" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+<link rel="manifest" href="site.webmanifest" />
+
+<!-- Social preview. Scrapers do not run JavaScript and need absolute URLs, so run
+     `npm run set-site-url https://your-domain.com` before deploying. -->
+<link rel="canonical" href="https://example.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Muhammad Memon" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content="https://example.com/" />
+<meta property="og:title" content="Muhammad Memon &mdash; Statistics &amp; Machine Learning" />
+<meta property="og:description" content="An explorable 3D portfolio. Sail between islands to see projects, research, leadership and a resume." />
+<meta property="og:image" content="https://example.com/og-image.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A low-poly night seascape with a striped lighthouse on an island, beneath the name Muhammad Memon." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Muhammad Memon &mdash; Statistics &amp; Machine Learning" />
+<meta name="twitter:description" content="An explorable 3D portfolio. Sail between islands to see projects, research, leadership and a resume." />
+<meta name="twitter:image" content="https://example.com/og-image.png" />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;700;800&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+
+<!-- Styles, in cascade order -->
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="styles/hud.css" />
+<link rel="stylesheet" href="styles/overlays.css" />
+<link rel="stylesheet" href="styles/reader.css" />
+<link rel="stylesheet" href="styles/responsive.css" />
+
+<!-- Start fetching the renderer and app modules while the document parses. -->
+<link rel="preload" href="vendor/three.min.js" as="script" />
+<link rel="modulepreload" href="src/main.js" />
+<link rel="modulepreload" href="src/content.js" />
+<link rel="modulepreload" href="src/utils.js" />
+<link rel="modulepreload" href="src/scene/primitives.js" />
+<link rel="modulepreload" href="src/scene/water.js" />
+<link rel="modulepreload" href="src/scene/monuments.js" />
+<link rel="modulepreload" href="src/scene/palette.js" />
+<link rel="modulepreload" href="src/scene/flotsam.js" />
+<link rel="modulepreload" href="src/scene/wildlife.js" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Muhammad Memon",
+  "url": "https://example.com/",
+  "image": "https://example.com/og-image.png",
+  "jobTitle": "Statistical Science student",
+  "email": "mailto:muhammadmemon542@gmail.com",
+  "description": "Statistical Science student at the University of Toronto building machine-learning tools.",
+  "alumniOf": { "@type": "CollegeOrUniversity", "name": "University of Toronto" },
+  "knowsAbout": ["Statistics", "Machine learning", "PyTorch", "Model compression", "Data analysis"],
+  "sameAs": [
+    "https://www.linkedin.com/in/muhammad-memon22",
+    "https://github.com/Muhammad-Memon542"
+  ]
+}
+</script>
+</head>
+<body class="is-intro">
+<canvas id="scene" aria-hidden="true"></canvas>
+<div id="labels" aria-hidden="true"></div>
+
+<header class="hud">
+  <div class="brand">
+    <!-- [data-name] / [data-role] / [data-tagline] are pre-filled from src/content.js so
+         crawlers and no-JS visitors see real text; the app overwrites them on load.
+         `npm run check` fails if these drift out of sync with content.js. -->
+    <div class="brand-name" data-name>Muhammad Memon</div>
+    <p class="brand-role" data-role>Statistics &amp; machine learning</p>
+    <div class="hud-actions">
+      <button class="chipbtn chipbtn-primary" data-open-resume type="button">Resume</button>
+      <button class="chipbtn" id="harbor-btn" type="button">Return to harbor</button>
+      <button class="chipbtn" data-open-plain type="button">Read as a page</button>
+    </div>
+  </div>
+  <div class="hud-right">
+    <div class="skyswitch" role="group" aria-label="Time of day">
+      <button type="button" data-sky-set="day" aria-pressed="true" aria-label="Day">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.1" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7M3.2 3.2l1.2 1.2M11.6 11.6l1.2 1.2M3.2 12.8l1.2-1.2M11.6 4.4l1.2-1.2"/></g></svg>
+        <span>Day</span>
+      </button>
+      <button type="button" data-sky-set="night" aria-pressed="false" aria-label="Night">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12.6 10.4A5.6 5.6 0 0 1 5.6 3.4a5.6 5.6 0 1 0 7 7z" fill="currentColor"/></svg>
+        <span>Night</span>
+      </button>
+    </div>
+    <div class="stats">
+      <span class="stat"><b id="stat-islands">0/8</b> islands</span>
+      <span class="stat"><b id="stat-bottles">0/4</b> bottles</span>
+    </div>
+    <aside id="scroll" class="scroll" aria-label="Map of the islands">
+      <div id="scroll-top" class="scroll-roll" aria-hidden="true"></div>
+      <div class="scroll-body"><div id="scroll-paper" class="scroll-paper"><div class="scroll-inner">
+        <svg id="smap" class="smap" viewBox="-250 -250 500 500" role="group" aria-label="Map of the islands. Choose an island to sail there."></svg>
+        <p class="scroll-note"><span class="only-desktop">Click an island to sail there</span><span class="only-touch">Tap an island to sail there</span></p>
+      </div></div></div>
+      <div id="scroll-bottom" class="scroll-roll scroll-roll-bottom" aria-hidden="true"></div>
+      <button id="scroll-toggle" class="scroll-tab" type="button" aria-expanded="true" aria-controls="scroll-paper">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="scroll-toggle-text">Hide map</span>
+      </button>
+    </aside>
+  </div>
+</header>
+
+<div id="dock" class="dock" role="status" aria-live="polite">
+  <span class="pennant" id="dock-flag"></span>
+  <div class="dock-text"><strong id="dock-title"></strong><span id="dock-sub"></span></div>
+  <button id="dock-btn" class="btn btn-primary" type="button"><span id="dock-btn-label">Go ashore</span> <kbd id="dock-kbd" class="only-desktop">Enter</kbd></button>
+</div>
+
+<aside id="panel" class="panel" role="dialog" aria-modal="false" aria-labelledby="panel-title" aria-hidden="true" tabindex="-1">
+  <button class="panel-close" id="panel-close" type="button" aria-label="Close and return to the boat">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+  </button>
+  <div id="panel-body"></div>
+</aside>
+
+<div id="hint" class="hint"><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or arrow keys to sail, <kbd>Shift</kbd> for speed, <kbd>Enter</kbd> to go ashore. Or click an island on the map, or its name, to sail there on its own.</div>
+<div id="joystick" class="joystick" aria-hidden="true"><div class="knob" id="knob"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<section id="intro" class="intro" aria-label="Welcome">
+  <div class="intro-inner">
+    <p class="intro-role" data-role>Statistics &amp; machine learning</p>
+    <h1 class="intro-name" data-name>Muhammad Memon</h1>
+    <p class="intro-tag" data-tagline>I study statistics at the University of Toronto and build machine-learning tools. Sail between the islands to see what I’ve been working on.</p>
+    <div class="intro-actions">
+      <button id="start" class="btn btn-primary btn-big" type="button">Set sail</button>
+      <button class="linkbtn" data-open-resume type="button">Open my resume</button>
+      <button class="linkbtn" data-open-plain type="button">Read it as a regular page</button>
+    </div>
+    <p class="intro-controls">
+      <span class="only-desktop">Sail with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys and press <kbd>Enter</kbd> near an island to go ashore. Or click any island on the map and the boat sails there for you.</span>
+      <span class="only-touch">Steer with the wheel in the bottom corner, or open the map in the top corner and tap an island to sail there.</span>
+    </p>
+  </div>
+</section>
+
+<div id="plain" class="plain" aria-hidden="true">
+  <div class="plain-inner">
+    <div class="plain-bar"><button id="plain-close" class="btn btn-outline" type="button">Back to the sea</button></div>
+    <div id="plain-body"></div>
+  </div>
+</div>
+
+<div id="resume" class="resume" role="dialog" aria-modal="true" aria-labelledby="resume-title" aria-hidden="true">
+  <div class="resume-bar"><div class="resume-bar-inner">
+    <button id="resume-close" class="btn btn-outline" type="button">Close resume</button>
+    <a class="btn btn-primary" id="resume-dl" href="assets/Muhammad_Memon_Resume.pdf" download>Download PDF</a>
+  </div></div>
+  <article id="resume-sheet" class="sheet"></article>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:0;overflow:auto;padding:32px 20px;background:#0f2331;color:#e4eef0;z-index:99;font:16px/1.6 system-ui,sans-serif">
+    <div style="max-width:60ch;margin:0 auto">
+      <h2 style="margin:0 0 4px">Muhammad Memon</h2>
+      <p style="margin:0 0 18px;color:#9bb2ba">Statistics &amp; machine learning, University of Toronto</p>
+      <p>The interactive version of this portfolio needs JavaScript. Here are the essentials:</p>
+      <ul>
+        <li><a style="color:#f5c518" href="assets/Muhammad_Memon_Resume.pdf">Download my resume (PDF)</a></li>
+        <li><a style="color:#f5c518" href="mailto:muhammadmemon542@gmail.com">muhammadmemon542@gmail.com</a></li>
+        <li><a style="color:#f5c518" href="https://www.linkedin.com/in/muhammad-memon22">LinkedIn</a></li>
+        <li><a style="color:#f5c518" href="https://github.com/Muhammad-Memon542">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</noscript>
+
+<!-- Three.js r128 (MIT). Classic script: sets the global THREE before the module runs. -->
+<script src="vendor/three.min.js"></script>
+<!-- Application entry point (ES module). -->
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

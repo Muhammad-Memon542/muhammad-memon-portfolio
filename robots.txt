@@ -1,0 +1,6 @@
+# All crawlers welcome.
+User-agent: *
+Allow: /
+
+# Updated by `npm run set-site-url <url>`
+Sitemap: https://example.com/sitemap.xml

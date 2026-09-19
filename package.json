@@ -1,0 +1,23 @@
+{
+  "name": "muhammad-memon-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An explorable low-poly 3D archipelago portfolio built with Three.js and vanilla ES modules.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "set-site-url": "node scripts/set-site-url.mjs",
+    "icons": "python3 scripts/generate-icons.py"
+  },
+  "author": "Muhammad Memon",
+  "license": "MIT",
+  "keywords": [
+    "portfolio",
+    "threejs",
+    "webgl",
+    "3d",
+    "vanilla-js"
+  ]
+}

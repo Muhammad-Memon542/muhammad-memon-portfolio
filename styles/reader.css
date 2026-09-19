@@ -1,0 +1,52 @@
+/*
+ * Text fallbacks: the plain-page view, the printable resume sheet,
+ * print styles, and the no-WebGL state.
+ */
+/* ---------- plain page view ---------- */
+.plain{position:fixed;inset:0;z-index:20;background:var(--chart);color:var(--ink);overflow:auto;overscroll-behavior:contain;
+  transform:translateY(100%);visibility:hidden;transition:transform .5s cubic-bezier(.2,.8,.2,1),visibility 0s .5s}
+.plain.open{transform:none;visibility:visible;transition:transform .5s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.plain-inner{max-width:780px;margin:0 auto;padding:0 clamp(20px,5vw,40px) 90px}
+.plain-bar{position:sticky;top:0;display:flex;justify-content:flex-end;padding:14px 0;background:var(--chart);z-index:1}
+.notice{background:var(--chart-2);border-radius:12px;padding:12px 16px;margin:8px 0 0;font-size:15px}
+.p-head h1{font-family:var(--display);font-weight:800;font-size:clamp(60px,12vw,120px);line-height:.84;margin:28px 0 8px}
+.p-role{font-size:19px;margin:0;color:var(--muted)}
+.p-sec{margin-top:60px;padding-top:22px;border-top:3px solid var(--ink)}
+.p-sec > h2{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;margin:0 0 8px}
+.p-work{display:grid;grid-template-columns:190px 1fr;gap:26px;margin:34px 0}
+.p-work .cover{margin:0;aspect-ratio:1}
+.p-work h3{font-family:var(--display);font-weight:800;font-size:34px;line-height:.95;margin:0}
+.p-work .lede{font-size:17px;margin:12px 0}
+.resume{position:fixed;inset:0;z-index:25;background:var(--chart-2);color:var(--ink);overflow:auto;overscroll-behavior:contain;
+  transform:translateY(100%);visibility:hidden;transition:transform .5s cubic-bezier(.2,.8,.2,1),visibility 0s .5s}
+.resume.open{transform:none;visibility:visible;transition:transform .5s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.resume-bar{position:sticky;top:0;z-index:1;background:var(--chart-2)}
+.resume-bar-inner{max-width:880px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:14px clamp(14px,4vw,32px)}
+.sheet{max-width:816px;margin:6px auto 64px;background:#fdfdfb;color:#14212b;border-radius:3px;box-shadow:0 1px 2px rgba(6,28,42,.12),0 24px 60px -24px rgba(6,28,42,.45);
+  padding:54px 62px 62px;font-size:14.5px;line-height:1.45}
+.sheet a{color:inherit;text-decoration-color:rgba(20,33,43,.35);text-underline-offset:3px}
+.rs-head{text-align:center}
+.rs-head h1{font-family:var(--display);font-weight:800;font-size:54px;line-height:.9;margin:0 0 10px}
+.rs-contact{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 12px;margin:0;font-size:14px}
+.rs-sep{display:inline-block;width:1px;height:1em;background:currentColor;opacity:.35}
+.rs-sec h2{font-family:var(--display);font-weight:800;font-size:25px;line-height:1;margin:26px 0 10px;padding-bottom:5px;border-bottom:2px solid #14212b}
+.rs-entry{margin:0 0 14px}
+.rs-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:18px}
+.rs-line h3{font-size:15px;font-weight:700;margin:0}
+.rs-tech,.rs-sub{font-style:italic;color:#44545f;font-weight:400}
+.rs-right{white-space:nowrap;text-align:right}
+.sheet ul{margin:5px 0 0;padding-left:1.15em}
+.sheet li{margin:3px 0}
+.rs-skills{margin:0}
+.rs-skills div{margin:3px 0}
+.rs-skills dt{display:inline;font-weight:700}
+.rs-skills dt::after{content:': '}
+.rs-skills dd{display:inline;margin:0}
+@media print{
+  html,body{height:auto;overflow:visible;background:#fff}
+  body > *:not(.resume){display:none !important}
+  .resume{position:static;transform:none;visibility:visible;overflow:visible;background:#fff}
+  .resume-bar{display:none}
+  .sheet{box-shadow:none;margin:0;max-width:none;padding:0}
+}
+body.no-webgl .hud,body.no-webgl .intro,body.no-webgl .dock,body.no-webgl .joystick,body.no-webgl #plain-close{display:none}

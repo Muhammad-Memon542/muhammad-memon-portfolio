@@ -1,0 +1,83 @@
+/*
+ * Floating scene UI: the dock card, buttons, the sliding side panel,
+ * the intro splash, and the hint / toast / joystick controls.
+ */
+/* ---------- dock card ---------- */
+.dock{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:max(24px,env(safe-area-inset-bottom));z-index:6;display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;
+  background:var(--chart);color:var(--ink);border-radius:16px;box-shadow:var(--shadow);max-width:calc(100% - 32px);
+  transform:translateY(24px);opacity:0;pointer-events:none;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1)}
+.dock.show{opacity:1;transform:none;pointer-events:auto}
+.dock .btn{flex:none}
+body.panel-open .dock,body.is-intro .dock{opacity:0;pointer-events:none}
+.dock .pennant{width:14px;height:20px}
+.dock-text strong{display:block;font-family:var(--display);font-weight:800;font-size:26px;line-height:.95}
+.dock-text span{font-size:13px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-weight:700;text-decoration:none;border:2px solid transparent;line-height:1.2}
+.btn-primary{background:var(--signal);color:var(--signal-ink)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-primary kbd{background:rgba(15,42,58,.12);border-color:rgba(15,42,58,.25);color:var(--signal-ink)}
+.btn-outline{border-color:var(--ink);color:var(--ink);background:transparent}
+.btn-outline:hover{background:var(--chart-2)}
+
+/* ---------- side panel (logbook page) ---------- */
+.panel{position:fixed;top:12px;right:12px;bottom:12px;z-index:8;width:min(460px,calc(100% - 24px));background:var(--chart);color:var(--ink);
+  border-radius:20px;box-shadow:var(--shadow);overflow:auto;overscroll-behavior:contain;padding:26px 28px 34px;
+  transform:translateX(calc(100% + 24px));visibility:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s .45s}
+.panel:focus{outline:none}
+.panel.open{transform:none;visibility:visible;transition:transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.panel-close{position:sticky;top:0;float:right;margin:-10px -12px 0 8px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--chart);display:grid;place-items:center;z-index:1}
+.panel-close:hover{background:var(--chart-2)}
+.pc-head{display:flex;gap:12px;align-items:flex-start}
+.pc-head .pennant{width:16px;height:24px;margin-top:7px}
+.pc h2{font-family:var(--display);font-weight:800;font-size:clamp(42px,6vw,58px);line-height:.9;margin:0}
+.pc .sub,.p-work .sub{margin:6px 0 0;color:var(--muted);font-size:15px}
+.lede{font-size:19px;line-height:1.45;margin:20px 0}
+.prose{font-size:16px;line-height:1.62;max-width:62ch}
+.prose p{margin:0 0 1em}
+.prose ul{padding-left:1.1em;margin:0 0 1em}
+.prose li{margin:.4em 0}
+.prose strong{font-weight:700}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;margin:20px 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.meta div{display:contents}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0;font-weight:700}
+.tags{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.tags li{font-size:13px;padding:4px 10px;border-radius:6px;background:var(--chart-2)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.cover{position:relative;border-radius:14px;background-color:var(--c);aspect-ratio:5/3;display:grid;place-items:center;margin:20px 0 0;overflow:hidden;color:rgba(255,255,255,.92);
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.14) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 1px,transparent 1px 22px)}
+.cover svg{width:58%;height:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.18))}
+
+/* ---------- intro ---------- */
+.intro{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;padding:clamp(22px,5vw,64px);color:#fff;
+  background:linear-gradient(to top,rgba(6,22,34,.78) 0%,rgba(6,22,34,.3) 45%,rgba(6,22,34,0) 72%);transition:opacity .9s}
+.intro.gone{opacity:0;pointer-events:none}
+.intro-inner{max-width:900px;min-width:0}
+.intro-role{margin:0 0 6px;font-size:18px;opacity:.92}
+.intro-name{font-family:var(--display);font-weight:800;font-size:clamp(56px,13.5vw,176px);overflow-wrap:break-word;line-height:.8;margin:0;text-shadow:0 4px 40px rgba(6,22,34,.35)}
+.intro-tag{font-size:clamp(17px,2vw,21px);max-width:36ch;margin:20px 0 26px;line-height:1.4}
+.intro-actions{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center}
+.btn-big{font-size:19px;padding:14px 30px}
+.linkbtn{background:none;border:0;color:#fff;text-decoration:underline;text-underline-offset:4px;padding:8px 0;font-size:16px}
+.intro-controls{margin:24px 0 0;font-size:14px;opacity:.9;max-width:52ch}
+.intro kbd{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35);color:#fff}
+.only-touch{display:none}
+.touch .only-touch{display:inline}
+.touch .only-desktop{display:none}
+
+/* ---------- hint, toast, joystick ---------- */
+.hint{position:fixed;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));z-index:4;padding:10px 14px;background:var(--glass);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:12px;font-size:14px;box-shadow:var(--shadow);max-width:min(430px,calc(100% - 36px));
+  opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s;pointer-events:none}
+.hint.show{opacity:1;transform:none}
+.touch .hint{display:none}
+.toast{position:fixed;left:0;right:0;margin:0 auto;width:max-content;top:max(18px,env(safe-area-inset-top));z-index:12;transform:translateY(-12px);opacity:0;background:var(--ink);color:var(--chart);
+  padding:12px 18px 13px;border-radius:14px;max-width:min(440px,calc(100% - 32px));font-size:15px;line-height:1.4;box-shadow:var(--shadow);pointer-events:none;transition:opacity .3s,transform .3s}
+.toast.show{opacity:1;transform:none}
+.toast strong{display:block;font-family:var(--display);font-weight:700;font-size:21px;line-height:1.05;margin-bottom:3px}
+.joystick{display:none;position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:6;width:128px;height:128px;border-radius:50%;
+  touch-action:none;background:var(--glass);border:3px solid rgba(255,255,255,.65);box-shadow:var(--shadow)}
+.touch .joystick{display:block}
+body.is-intro .joystick,body.panel-open .joystick{display:none}
+.knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--signal);
+  box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 0 0 7px rgba(15,42,58,.14);pointer-events:none}

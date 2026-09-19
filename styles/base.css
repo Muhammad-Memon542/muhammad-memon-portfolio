@@ -1,0 +1,41 @@
+/*
+ * Design tokens (light + dark), resets, and the WebGL canvas.
+ */
+:root{
+  --chart:#eef3ee; --chart-2:#dfe9e3; --ink:#0f2a3a; --muted:#4b6673; --line:rgba(15,42,58,.16);
+  --signal:#f5c518; --signal-ink:#0f2a3a; --buoy:#d7263d;
+  --glass:rgba(238,243,238,.88); --shadow:0 18px 50px -18px rgba(6,28,42,.55);
+  --bg:#f6d5ae;
+  --display:'Big Shoulders Display','Arial Narrow','Roboto Condensed','Helvetica Neue',sans-serif;
+  --body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mapfont:'IM Fell English','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --paper:#efe1bf; --paper-edge:rgba(122,82,34,.24); --map-ink:#4a3322; --map-red:#a8322d; --map-sea-ink:rgba(46,104,117,.6);
+  --map-land:#dcc088; --map-grass:rgba(112,142,62,.45); --map-tree:#4c6a30;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-sky="day"]){
+    --chart:#0f2331; --chart-2:#183445; --ink:#e4eef0; --muted:#9bb2ba; --line:rgba(228,238,240,.16);
+    --buoy:#ff5a6a; --glass:rgba(15,35,49,.86); --shadow:0 18px 50px -18px rgba(0,0,0,.8);
+    --bg:#283462; --map-land:#c7ab70;
+    --paper:#d6c296; --paper-edge:rgba(80,50,16,.34);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]:not([data-sky="day"]),:root[data-sky="night"]{
+  --chart:#0f2331; --chart-2:#183445; --ink:#e4eef0; --muted:#9bb2ba; --line:rgba(228,238,240,.16);
+  --buoy:#ff5a6a; --glass:rgba(15,35,49,.86); --shadow:0 18px 50px -18px rgba(0,0,0,.8);
+  --bg:#283462; --map-land:#c7ab70;
+  --paper:#d6c296; --paper-edge:rgba(80,50,16,.34);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+kbd{font-family:var(--body);font-size:.8em;font-weight:700;padding:.05em .45em;border-radius:5px;border:1px solid var(--line);border-bottom-width:2px;background:var(--chart-2);color:var(--ink);white-space:nowrap}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
