@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Updated by `npm run set-site-url <url>`
-Sitemap: https://example.com/sitemap.xml
+Sitemap: https://muhammadmemon.ca/sitemap.xml
