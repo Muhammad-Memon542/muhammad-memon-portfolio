@@ -1,0 +1,19 @@
+{
+  // Cloudflare Workers static-assets config.
+  //
+  // This project is deployed with `npx wrangler deploy`. There is no Worker script and
+  // no build step — the repository root IS the site, so Wrangler just uploads it and
+  // serves the files directly. Without this file Wrangler falls back to auto-detecting
+  // the project and answering its own setup prompts, which is fine until the heuristics
+  // change; pinning it here makes every deploy identical.
+  //
+  // `_headers` (caching + security policy) is picked up automatically from the assets
+  // directory. Requests to static assets are free and unlimited on Cloudflare.
+  "name": "muhammad-memon-portfolio",
+  "compatibility_date": "2026-09-19",
+  "assets": {
+    "directory": "./",
+    // serve our own 404.html instead of a bare Cloudflare 404
+    "not_found_handling": "404-page"
+  }
+}
