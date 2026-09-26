@@ -20,8 +20,9 @@ export const CONTENT = {
       pos: [0, 0], r: 13, pier: Math.PI / 2, labelY: 23,
       summary: 'Hi, I’m Muhammad. I study Statistical Science at the University of Toronto and build ML tools, from hackathon prototypes to research on making models cheaper to run.',
       body: `<p>Every island holds one chapter: my resume, a bit about me, three things I’ve built, the teams I help run, and a signal tower for getting in touch.</p>
-             <p>Sail close to an island and go ashore to read it, or click an island’s name and the boat will take you there. Four bottles are drifting somewhere out at sea, each with a note inside.</p>`,
-      actions: ['resume']
+             <p>Sail close to an island and go ashore to read it, or click an island’s name and the boat will take you there. Four bottles are drifting somewhere out at sea, each with a note inside.</p>
+             <p>Short on time? Take the guided tour and the lookout will sail you round every island.</p>`,
+      actions: ['tour', 'resume']
     },
     {
       id: 'resume', kind: 'logbook', section: 'resume',
@@ -52,15 +53,13 @@ export const CONTENT = {
       tags: ['Multimodal AI', 'Accessibility', 'Hackathon'],
       /*
        * Hiring managers look for a live demo or source on every project, so add links
-       * here once each one has somewhere public to point at. The first link renders as
-       * the primary button and the rest as outlines; external links open in a new tab.
-       * The same `links` array works on any island.
-       *
-       * links: [
-       *   { label: 'Live demo', href: 'https://lectra.your-domain.com' },
-       *   { label: 'Source', href: 'https://github.com/Muhammad-Memon542/lectra' }
-       * ]
+       * to the other islands once each has somewhere public to point at. The first link
+       * renders as the primary button and the rest as outlines; external links open in a
+       * new tab. The same `links` array works on any island.
        */
+      links: [
+        { label: 'Source on GitHub', href: 'https://github.com/Muhammad-Memon542/Lectra' }
+      ]
     },
     {
       id: 'efficient-ml', kind: 'crystal', section: 'work',
@@ -167,6 +166,29 @@ export const CONTENT = {
       ] }
     ]
   },
+  /*
+   * The guided tour: the order the lookout visits the islands and what he says at each.
+   * Keep lines short; they're typed into a speech bubble over the boat. The island's own
+   * panel opens after each line, so the bubble only needs the headline.
+   */
+  tour: {
+    stops: [
+      { id: 'home', line: 'Ahoy, and welcome aboard! I’ll show you round Muhammad’s islands. He studies statistics at U of T and builds ML tools.' },
+      { id: 'about', line: 'The Cabin: the man himself. Statistical Science at the University of Toronto, graduating in 2028.' },
+      { id: 'leadership', line: 'The Observatory! He helps run UTMIST, one of U of T’s biggest AI clubs, and the DeerHacks hackathon.' },
+      { id: 'fund-reporting', line: 'A summer at NBP Funds, where his Python scripts cut weekly reporting time by about 70%.' },
+      { id: 'efficient-ml', line: 'Leaner Models: research on training ML with less energy. About 30% less, in fact.' },
+      { id: 'lectra', line: 'Lectra! Built in 24 hours, 2nd of 30+ teams at EmberHacks. Lectures in, accessible notes out.' },
+      { id: 'resume', line: 'The Logbook has the whole voyage on one page, with a PDF to take with you.' },
+      { id: 'contact', line: 'Last stop: the Signal Tower. Internship, research or a hackathon team in mind? Send a signal!' }
+    ],
+    /* one of these, then "Next stop: …", as the boat casts off */
+    sailing: ['Anchors aweigh!', 'Hold on to your hat!', 'Full sail ahead!', 'Steady as she goes!', 'Trim the sails!', 'Onward!'],
+    paused: 'Aye, you have the helm! Press Resume when you want me back.',
+    finale: 'That’s the whole archipelago! Thanks for sailing with me. The sea’s all yours now.'
+  },
+  /* Credit line at the foot of the plain page. */
+  colophon: { text: 'Built by hand with Three.js and plain JavaScript. No framework, no image files.', label: 'Read this site’s source on GitHub', href: 'https://github.com/Muhammad-Memon542/muhammad-memon-portfolio' },
   allBottles: 'That’s all four. Thorough people make the best collaborators, so come say hi at the Signal Tower.',
   allIslands: 'You’ve visited every island. Thanks for sailing all the way through.'
 };

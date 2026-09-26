@@ -22,6 +22,10 @@ build step, no dependencies to install.**
   that breach and splash, and a rubber duck hidden well offshore.
 - **One wave function, two places.** The same maths runs in GLSL on the GPU (the water
   surface) and in JS on the CPU (boat, buoys, bottles), so everything floats on the same swell.
+- **There's a guided tour.** A bearded lookout climbs into a crow's nest at the masthead
+  and sails you round every island: he points the way, raises his spyglass on arrival and
+  narrates each stop in a speech bubble while the camera circles the island. It ends in
+  fireworks over the Signal Tower. Like everything else, he's built from primitives in code.
 - **It degrades well.** Without WebGL — or if the GPU context is lost — it falls back to a
   clean text version of the same content. It's keyboard-navigable, screen-reader labelled,
   and honours `prefers-reduced-motion` and `prefers-color-scheme`.
@@ -59,6 +63,10 @@ npm run set-site-url https://your-domain.com
 
 Then publish the repository root as a static site — there's nothing to build:
 
+- **Cloudflare Workers** (what muhammadmemon.ca uses) — the repo is connected to Workers
+  Builds, so **every push to `main` deploys**; `wrangler.jsonc` pins the config. Since the
+  assets directory is the repo root, `.assetsignore` keeps `.git`, the scripts and the
+  config files off the public site.
 - **Netlify** — `netlify.toml` is included with caching and security headers.
 - **Vercel / Cloudflare Pages** — works with zero configuration; set the output directory to the repo root.
 - **GitHub Pages** — serve from the branch root. Relative paths mean project sites
@@ -76,6 +84,7 @@ Then publish the repository root as a static site — there's nothing to build:
 │   ├── base.css             Design tokens (light/dark), resets, canvas
 │   ├── hud.css              HUD, day/night switch, stats, scroll map, labels
 │   ├── overlays.css         Dock, side panel, intro, hint/toast/joystick
+│   ├── tour.css             Guided tour: bar, speech bubble, title card
 │   ├── reader.css           Plain-page + printable resume + no-WebGL fallback
 │   └── responsive.css       Narrow-viewport, touch, reduced-motion overrides
 ├── src/
@@ -88,6 +97,8 @@ Then publish the repository root as a static site — there's nothing to build:
 │       ├── monuments.js     Per-island landmarks (lighthouse, cabin, observatory…)
 │       ├── flotsam.js       Buoys, barrel/crate rafts, the wreck, the rubber duck
 │       ├── wildlife.js      Circling gulls and breaching dolphin pods
+│       ├── lookout.js       The tour guide in his crow's nest
+│       ├── fireworks.js     Rockets, bursts and sparkles for the tour
 │       └── palette.js       Day / dusk / night colour stops
 ├── vendor/three.min.js      Three.js r128 (MIT)
 ├── assets/
@@ -156,22 +167,59 @@ write-ups, the resume, and the bottle notes. Nothing else needs to change.
 - **Project links.** Hiring managers consistently rank a live demo or public source as
   the thing they most want on a project. Any island accepts a `links` array — the first
   entry renders as the primary button, the rest as outlines, and external links open in a
-  new tab. There's a commented example on the Lectra island ready to fill in:
+  new tab. Lectra links its GitHub repo; add a live demo alongside it once there is one:
 
   ```js
   links: [
     { label: 'Live demo', href: 'https://lectra.your-domain.com' },
-    { label: 'Source', href: 'https://github.com/Muhammad-Memon542/lectra' }
+    { label: 'Source on GitHub', href: 'https://github.com/Muhammad-Memon542/Lectra' }
   ]
   ```
 
 - After changing your name or tagline, re-run `npm run icons` to redraw the social card.
+
+## The guided tour
+
+Started from the intro, the **Tour** chip in the header, the Home Harbor panel, the
+<kbd>T</kbd> key or the `#tour` link. The route and every line the lookout says live in
+`tour` in [`src/content.js`](src/content.js); the order of `stops` is the order he sails.
+
+| | |
+| --- | --- |
+| Next stop / skip the sail | <kbd>Enter</kbd> or <kbd>Space</kbd> |
+| End the tour | <kbd>Esc</kbd> or <kbd>T</kbd> |
+| Pause | Just take the helm (<kbd>W A S D</kbd>); **Resume** picks up where you left off |
+| Jump to a stop | Click any island's label, or the island on the map |
+
+The code is split three ways: `src/scene/lookout.js` (the figure and crow's nest, posed
+procedurally every frame), `src/scene/fireworks.js` (one ring-buffered `THREE.Points`
+for rockets, bursts and arrival sparkles) and the **GUIDED TOUR** section of `main.js`
+(the stop-by-stop state machine, camera shots, speech bubble and tour bar).
+
+## Links you can share
+
+Two views have their own address, handy for a job application, an email signature or the
+resume PDF itself:
+
+| Link | Opens |
+| --- | --- |
+| `https://muhammadmemon.ca/#resume` | The resume viewer, with the PDF download |
+| `https://muhammadmemon.ca/#read` | The whole portfolio as a plain, scrollable page |
+| `https://muhammadmemon.ca/#tour` | Straight into the guided tour |
+
+Opening either view from inside the site pushes a history entry too, so the Back button
+(or a phone's back swipe) closes it instead of leaving the site.
 
 ## How it fits together
 
 `index.html` loads the stylesheets, then `vendor/three.min.js` as a classic script (which
 defines the global `THREE`), then `src/main.js` as a module. Module scripts are deferred,
 so both `THREE` and the DOM are ready by the time the app runs.
+
+The app wires up the intro, overlays and links first, then waits for one paint before
+building the world. Building it and compiling its shaders is one long task (seconds on a
+first visit, before the GPU has cached anything), so without that pause the browser would
+hold back the intro it has already parsed. The canvas fades in once its first frame is drawn.
 
 `main.js` owns the runtime — scene, boat physics, autopilot, overlay UI, the parchment map
 and the render loop — and pulls in copy from `content.js`, pure helpers from `utils.js`,

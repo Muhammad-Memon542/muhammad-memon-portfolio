@@ -38,4 +38,6 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16p
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--signal);outline-offset:3px}
 kbd{font-family:var(--body);font-size:.8em;font-weight:700;padding:.05em .45em;border-radius:5px;border:1px solid var(--line);border-bottom-width:2px;background:var(--chart-2);color:var(--ink);white-space:nowrap}
-#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none;opacity:0;transition:opacity .9s ease}
+/* main.js adds .ready once the first frame is drawn, so the sea fades in behind the intro */
+#scene.ready{opacity:1}

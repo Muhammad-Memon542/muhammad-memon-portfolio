@@ -27,8 +27,10 @@ import { PALETTE, SKY_COLS, SKY_NUMS } from './scene/palette.js';
 import { createFlotsam, createShipwreck } from './scene/flotsam.js';
 import { createWildlife } from './scene/wildlife.js';
 import { detectQuality, measureViewport, onViewportChange } from './scene/quality.js';
+import { createLookout } from './scene/lookout.js';
+import { createFireworks } from './scene/fireworks.js';
 
-(() => {
+(async () => {
 'use strict';
 
 /* ---------- DOM ---------- */
@@ -43,7 +45,11 @@ const ui = {
   harbor: $('#harbor-btn'), hint: $('#hint'), joy: $('#joystick'), knob: $('#knob'),
   dockLabel: $('#dock-btn-label'), dockKbd: $('#dock-kbd'),
   scroll: $('#scroll'), scrollPaper: $('#scroll-paper'), scrollToggle: $('#scroll-toggle'), scrollToggleText: $('#scroll-toggle-text'), scrollTop: $('#scroll-top'), scrollBottom: $('#scroll-bottom'), smap: $('#smap'),
-  resume: $('#resume'), resumeSheet: $('#resume-sheet'), resumeClose: $('#resume-close'), resumeDl: $('#resume-dl')
+  resume: $('#resume'), resumeSheet: $('#resume-sheet'), resumeClose: $('#resume-close'), resumeDl: $('#resume-dl'),
+  tour: $('#tour'), tourKicker: $('#tour-kicker'), tourTitle: $('#tour-title'), tourPrev: $('#tour-prev'), tourNext: $('#tour-next'),
+  tourNextLabel: $('#tour-next-label'), tourEnd: $('#tour-end'), tourDots: $('#tour-dots'), tourFill: $('#tour-fill'), tourBoat: $('#tour-boat'),
+  tourLive: $('#tour-live'), bubble: $('#tour-bubble'), bubbleText: $('#tour-bubble-text'),
+  card: $('#tour-card'), cardKicker: $('#tour-card-kicker'), cardTitle: $('#tour-card-title'), cardSub: $('#tour-card-sub'), fader: $('#fader')
 };
 const hudEl = $('.hud');
 if (hudEl) hudEl.inert = true;
@@ -72,7 +78,6 @@ function setTouchMode(on) {
 addEventListener('pointerdown', (e) => setTouchMode(e.pointerType === 'touch'), { capture: true, passive: true });
 addEventListener('keydown', () => setTouchMode(false), { capture: true });
 
-document.title = `${CONTENT.name}, ${CONTENT.role.toLowerCase()}`;
 $$('[data-name]').forEach(el => { el.textContent = CONTENT.name; });
 $$('[data-role]').forEach(el => { el.textContent = CONTENT.role; });
 $$('[data-tagline]').forEach(el => { el.textContent = CONTENT.tagline; });
@@ -89,14 +94,18 @@ const tagsHTML = (d) => d.tags ? `<ul class="tags">${d.tags.map(t => `<li>${t}</
 function linksHTML(d) {
   const parts = (d.links || []).map((l, i) =>
     `<a class="btn ${i === 0 ? 'btn-primary' : 'btn-outline'}" href="${l.href}"${isExt(l.href) ? ' target="_blank" rel="noopener"' : ''}>${l.label}</a>`);
+  if ((d.actions || []).includes('tour')) {
+    parts.push(`<button class="btn ${parts.length ? 'btn-outline' : 'btn-primary'}" type="button" data-tour-start>Take the guided tour</button>`);
+  }
   if ((d.actions || []).includes('resume')) {
     parts.push(`<button class="btn ${parts.length ? 'btn-outline' : 'btn-primary'}" type="button" data-open-resume>Open resume</button>`);
   }
   return parts.length ? `<div class="links">${parts.join('')}</div>` : '';
 }
 
-function panelHTML(d) {
+function panelHTML(d, stop) {
   return `<div class="pc" style="--c:${d.color}">
+    ${stop ? `<p class="pc-tour">Guided tour · stop ${stop.n} of ${stop.of}</p>` : ''}
     <div class="pc-head"><span class="pennant"></span><div><h2 id="panel-title">${d.title}</h2><p class="sub">${d.sub}</p></div></div>
     ${d.section === 'work' ? coverHTML(d) : ''}
     <p class="lede">${d.summary}</p>
@@ -120,12 +129,17 @@ function buildPlain(notice) {
         <h3>${w.title}</h3><p class="sub">${w.sub}</p><p class="lede">${w.summary}</p>${metaHTML(w)}<div class="prose">${w.body}</div>${linksHTML(w)}</div></article>`).join('')}
     </section>
     ${block(lab ? (lab.heading || 'Experiments') : '', lab)}
-    ${block('Contact', contact)}`;
+    ${block('Contact', contact)}
+    ${CONTENT.colophon ? `<footer class="p-foot">${CONTENT.colophon.text} <a href="${CONTENT.colophon.href}" target="_blank" rel="noopener">${CONTENT.colophon.label}</a></footer>` : ''}`;
 }
 
 /* ---------- state + UI actions ---------- */
 const state = { mode: 'intro', panel: null, plain: false, resume: false, near: null, auto: null, visited: new Set(), bottles: 0, camBlend: 0, lastEdgeToast: -99, shake: 0, dead: false };
 const back = { panel: null, plain: null, resume: null };
+/* the guided tour (see GUIDED TOUR below); declared up here because the intro's button
+   can ask for a tour before the world exists */
+const tour = { active: false, pending: false, stops: [], i: 0, phase: 'idle', t: 0, legFrom: 1, pFrom: 0, orbitA: 0, say: null, doneAt: -1, shots: 0, mapWas: false };
+let worldReady = false;
 function restoreFocus(el) {
   if (el && el !== document.body && document.contains(el) && el.getClientRects().length && !el.closest('[aria-hidden="true"]')) el.focus({ preventScroll: true });
 }
@@ -151,20 +165,23 @@ function markVisited(isl) {
   if (isl.el) isl.el.classList.add('visited');
   updateStats();
   if (islands.length) syncMapMarks();
-  if (state.visited.size === CONTENT.islands.length) toast(`<strong>Every island visited</strong>${CONTENT.allIslands}`, 5200);
+  if (state.visited.size === CONTENT.islands.length && !tour.active) toast(`<strong>Every island visited</strong>${CONTENT.allIslands}`, 5200);
 }
-function openPanel(isl) {
+/* `stop` ({ n, of }) is passed by the guided tour: it labels the panel, and shows the
+   Logbook as a panel rather than jumping straight into the full-screen resume */
+function openPanel(isl, stop) {
   if (!isl) return;
   if (state.auto) cancelCourse();
-  if (isl.def.section === 'resume') { closePanel(); markVisited(isl); openResume(); return; }
+  if (isl.def.section === 'resume' && !stop) { closePanel(); markVisited(isl); openResume(); return; }
   if (!state.panel) back.panel = document.activeElement;
   state.panel = isl;
-  ui.panelBody.innerHTML = panelHTML(isl.def);
+  ui.panelBody.innerHTML = panelHTML(isl.def, stop);
   ui.panel.classList.add('open');
   ui.panel.setAttribute('aria-hidden', 'false');
   document.body.classList.add('panel-open');
   ui.panel.scrollTop = 0;
-  ui.panel.focus({ preventScroll: true });
+  /* leave focus on the tour's buttons if that's where the visitor is */
+  if (!(stop && ui.tour.contains(document.activeElement))) ui.panel.focus({ preventScroll: true });
   ui.hint.classList.remove('show');
   markVisited(isl);
 }
@@ -177,16 +194,49 @@ function closePanel() {
   if (document.activeElement && ui.panel.contains(document.activeElement)) document.activeElement.blur();
   restoreFocus(back.panel); back.panel = null;
 }
-function openPlain() {
+/* ---------- shareable links ----------
+ * /#resume and /#read open the resume and the plain page directly, so either can be
+ * linked from an application or an email. Opening one from the UI also pushes a history
+ * entry, so a phone's Back gesture closes it instead of leaving the site. */
+const ROUTE = { resume: '#resume', plain: '#read' };
+function pushRoute(hash) {
+  if (location.hash !== hash) history.pushState({ overlay: hash }, '', hash);
+}
+function dropRoute(hash) {
+  if (location.hash !== hash) return;
+  /* step back over the entry we pushed; a page that was opened on this hash just loses it */
+  if (history.state && history.state.overlay === hash) history.back();
+  else history.replaceState(null, '', location.pathname + location.search);
+}
+function syncRoute() {
+  const h = location.hash;
+  if (h === '#tour') {
+    /* a one-shot link: start the tour, then drop the hash so Back behaves normally */
+    history.replaceState(null, '', location.pathname + location.search);
+    requestTour();
+    return;
+  }
+  if (h === ROUTE.resume) { openResume(); return; }
+  closeResume();
+  if (h === ROUTE.plain) openPlain();
+  else if (!document.body.classList.contains('no-webgl')) closePlain();
+}
+addEventListener('popstate', syncRoute);
+addEventListener('hashchange', syncRoute);
+
+function openPlain(route = true) {
   if (!state.plain) back.plain = document.activeElement;
   state.plain = true;
+  if (route) pushRoute(ROUTE.plain);
   ui.plain.classList.add('open');
   ui.plain.setAttribute('aria-hidden', 'false');
   ui.plain.scrollTop = 0;
   setTimeout(() => ui.plainClose.focus({ preventScroll: true }), 60);
 }
 function closePlain() {
+  if (!state.plain) return;
   state.plain = false;
+  dropRoute(ROUTE.plain);
   ui.plain.classList.remove('open');
   ui.plain.setAttribute('aria-hidden', 'true');
   restoreFocus(back.plain); back.plain = null;
@@ -209,11 +259,18 @@ function resumeHTML() {
       : sct.entries.map(entry).join('')}</section>`).join('')}`;
 }
 let resumeBuilt = false;
+function buildResume() {
+  if (!resumeBuilt) { ui.resumeSheet.innerHTML = resumeHTML(); resumeBuilt = true; }
+}
+/* the print stylesheet prints the resume sheet, so make sure it exists even if the
+   visitor hits Cmd/Ctrl+P without ever opening it */
+addEventListener('beforeprint', buildResume);
 function openResume() {
   closeMapOverlay();
-  if (!resumeBuilt) { ui.resumeSheet.innerHTML = resumeHTML(); resumeBuilt = true; }
+  buildResume();
   if (!state.resume) back.resume = document.activeElement;
   state.resume = true;
+  pushRoute(ROUTE.resume);
   ui.resume.classList.add('open');
   ui.resume.setAttribute('aria-hidden', 'false');
   ui.resume.scrollTop = 0;
@@ -223,6 +280,7 @@ function openResume() {
 function closeResume() {
   if (!state.resume) return;
   state.resume = false;
+  dropRoute(ROUTE.resume);
   ui.resume.classList.remove('open');
   ui.resume.setAttribute('aria-hidden', 'true');
   restoreFocus(back.resume); back.resume = null;
@@ -234,7 +292,7 @@ if (ui.resumeDl) {
   ui.resumeDl.href = `assets/${encodeURIComponent(CONTENT.resume.filename)}`;
   ui.resumeDl.setAttribute('download', CONTENT.resume.filename);
 }
-$$('[data-open-plain]').forEach(b => b.addEventListener('click', openPlain));
+$$('[data-open-plain]').forEach(b => b.addEventListener('click', () => openPlain()));
 ui.plainClose.addEventListener('click', closePlain);
 ui.panelClose.addEventListener('click', closePanel);
 ui.resumeClose.addEventListener('click', closeResume);
@@ -242,6 +300,7 @@ document.addEventListener('click', (e) => {
   const t = e.target instanceof Element ? e.target : null;
   if (!t) return;
   if (t.closest('[data-open-resume]')) { e.preventDefault(); openResume(); }
+  if (t.closest('[data-tour-start]')) { e.preventDefault(); toggleTour(); }
 });
 
 /* ---------- bail out gracefully without WebGL ---------- */
@@ -249,10 +308,44 @@ function fallback(msg) {
   document.body.classList.add('no-webgl');
   document.body.classList.remove('is-intro');
   buildPlain(msg || 'Your browser couldn’t start the 3D scene, so here is the same portfolio as a regular page.');
-  openPlain();
+  openPlain(false);   /* the plain page is the whole site now, so no Back entry to close it */
 }
 addEventListener('keydown', (e) => { if (e.code === 'Escape' && state.resume) { closeResume(); e.stopImmediatePropagation(); } }, true);
+/* Hooked up before the world is built: the button is on screen from the first paint, and
+   a click while the scene is still loading shouldn't be lost. */
+function start(opts) {
+  if (state.mode !== 'intro') return;
+  state.mode = 'sail';
+  if (hudEl) hudEl.inert = false;
+  state.camBlend = reduceMotion ? 60 : 0.45;
+  document.body.classList.remove('is-intro');
+  ui.intro.classList.add('gone');
+  ui.intro.setAttribute('aria-hidden', 'true');
+  if (document.activeElement) document.activeElement.blur();
+  setTimeout(() => { ui.intro.hidden = true; }, 950);
+  if (opts && opts.quiet) return;   /* the tour does its own explaining */
+  if (touchMode) toast('<strong>Push the wheel to sail</strong>Up goes forward, sideways turns. Or open the map in the top corner and tap an island.', 6500);
+  else { ui.hint.classList.add('show'); setTimeout(() => ui.hint.classList.remove('show'), 11000); }
+}
+ui.start.addEventListener('click', start);
+/* "Take the guided tour" (intro, HUD, Home Harbor panel, plain page) and the T key */
+function requestTour() {
+  if (state.dead || document.body.classList.contains('no-webgl')) return;
+  if (state.plain) closePlain();
+  if (state.resume) closeResume();
+  start({ quiet: true });
+  if (worldReady) beginTour(); else tour.pending = true;
+}
+function toggleTour() { if (tour.active) endTour(); else requestTour(); }
+ui.start.focus({ preventScroll: true });
+syncRoute();
 if (typeof THREE === 'undefined') { fallback(); return; }
+/* Let the intro paint before the heavy lifting. Building the world and compiling its
+   shaders happens in one long task (seconds on a first visit, while the GPU's shader
+   cache is cold), and until it ends the browser can't show the intro text it has already
+   parsed. rAF + setTimeout resolves just after the next paint; the canvas then fades in
+   behind the intro once its first frame is drawn. */
+await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 /* Pick a quality tier before touching the GPU: it decides MSAA, pixel ratio, shadow
    resolution and how much scenery gets built. See src/scene/quality.js. */
 const quality = detectQuality();
@@ -284,6 +377,7 @@ renderer.shadowMap.type = quality.softShadows ? THREE.PCFSoftShadowMap : THREE.P
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xf6d5ae, 110, 390);
 const camera = new THREE.PerspectiveCamera(55, viewport.ratio, 0.5, 2600);
+const fireworks = createFireworks(scene);
 
 /* ---------- seeded RNG: keeps the island + scatter layout identical every load ---------- */
 const rng = mulberry32(20260918);
@@ -337,8 +431,11 @@ const animators = [];
 const beamU = { uColor: { value: new THREE.Color(0xfff1b8) }, uOpacity: { value: 0.1 } };
 const beamMat = new THREE.ShaderMaterial({
   uniforms: beamU, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
-  vertexShader: 'varying float vK; void main(){ vK = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; varying float vK; void main(){ gl_FragColor = vec4(uColor, uOpacity * pow(vK, 1.6)); }'
+  /* The beam sweeps at about the camera's height, so near the harbor it would pass straight
+     through the lens and wash the whole screen. Fading it out close to the camera keeps the
+     shaft visible from across the water without the flash. */
+  vertexShader: 'varying float vK; varying float vD; void main(){ vK = uv.y; vec4 mv = modelViewMatrix * vec4(position, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }',
+  fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; varying float vK; varying float vD; void main(){ gl_FragColor = vec4(uColor, uOpacity * pow(vK, 1.6) * smoothstep(6.0, 30.0, vD)); }'
 });
 let lanternLight = null;
 
@@ -492,6 +589,8 @@ const flagGeo = new THREE.BufferGeometry();
 flagGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, -0.5, 0, 0, -0.25, -0.95], 3));
 flagGeo.computeVertexNormals();
 mesh(flagGeo, new THREE.MeshStandardMaterial({ color: 0xd7263d, side: THREE.DoubleSide, flatShading: true }), flagPivot, 0, 0, 0, false);
+/* the tour guide, who climbs into a crow's nest on the masthead (top of the mast: y 5.4) */
+const lookout = createLookout({ parent: boatG, mastTop: new THREE.Vector3(0, 5.4, 0.45), flag: flagPivot });
 
 /* ---------- wake particles ---------- */
 const wakeGeo = new THREE.PlaneGeometry(2, 2); wakeGeo.rotateX(-Math.PI / 2);
@@ -617,6 +716,7 @@ function setSky(k) {
   waterU.uFoam.value.copy(p.foamCol); waterU.uGlintCol.value.copy(p.glintCol);
   wake.forEach(w => w.m.material.color.copy(p.foamCol));
   waterU.uGlint.value = p.glint; waterU.uFresnel.value = p.fres; waterU.uFoamK.value = p.foam;
+  fireworks.setNight(k > 0.5);
 }
 let skyK = isDark() ? 1 : 0, skyTarget = skyK;
 setSky(skyK);
@@ -652,6 +752,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
     if (state.plain) closePlain();
     else if (SM.open && isNarrow()) { setScroll(false); ui.scrollToggle.focus({ preventScroll: true }); }
+    else if (tour.active) endTour();
     else if (state.panel) closePanel();
     else if (state.auto) cancelCourse();
     return;
@@ -659,6 +760,10 @@ addEventListener('keydown', (e) => {
   if (state.plain || state.resume || state.mode === 'intro') return;
   if (!state.panel && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   keys.add(e.code);
+  if (!e.repeat && !inControl) {
+    if (e.code === 'KeyT') { toggleTour(); return; }
+    if (tour.active && ['Enter', 'NumpadEnter', 'Space'].includes(e.code)) { e.preventDefault(); tourNext(); return; }
+  }
   if (e.repeat || inControl || state.panel) return;
   if ((e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'KeyE') && state.near && !state.auto) { e.preventDefault(); openPanel(state.near); }
   if (e.code === 'KeyR') respawn();
@@ -688,10 +793,22 @@ addEventListener('wheel', (e) => {
 
 /* ---------- autopilot: steer toward the chosen island's pier, easing round anything in the way ---------- */
 const AP = { side: 1, slow: 0, back: 0, t: 0 };
+/* clicking an island (label or map): during the tour, that island becomes the next stop */
 function setCourse(isl) {
+  if (tour.active) {
+    const j = tour.stops.findIndex((st) => st.isl === isl);
+    if (j >= 0) { goStop(j); return; }
+  }
+  sailTo(isl);
+}
+function arrive(isl) {
+  if (tour.active && tour.phase === 'sail' && tour.stops[tour.i].isl === isl) tourArrive(isl);
+  else openPanel(isl);
+}
+function sailTo(isl) {
   if (!isl || state.mode !== 'sail' || state.dead) return;
   closeMapOverlay(); closePanel(); closeResume();
-  if (Math.hypot(isl.dockX - boat.x, isl.dockZ - boat.z) < 7) { openPanel(isl); return; }
+  if (Math.hypot(isl.dockX - boat.x, isl.dockZ - boat.z) < 7) { arrive(isl); return; }
   state.auto = isl; Object.assign(AP, { side: 1, slow: 0, back: 0, t: 0 });
   ui.hint.classList.remove('show');
   refreshDock();
@@ -700,7 +817,7 @@ function cancelCourse() { if (!state.auto) return; state.auto = null; refreshDoc
 function autopilot(dt) {
   const T = state.auto, dx = T.dockX - boat.x, dz = T.dockZ - boat.z, dist = Math.hypot(dx, dz);
   AP.t += dt;
-  if (dist < 4.5) { openPanel(T); return { thr: 0, steer: 0, boost: false }; }
+  if (dist < 4.5) { arrive(T); return { thr: 0, steer: 0, boost: false }; }
   if (AP.t > 60) { cancelCourse(); toast('<strong>Autopilot gave up</strong>Something is in the way. Take the helm with the arrow keys or the wheel.'); return { thr: 0, steer: 0, boost: false }; }
   let ax = dx / dist, az = dz / dist;
   for (const c of colliders) {
@@ -728,6 +845,7 @@ function getInput(dt) {
   let thr = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
   let steer = (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0) - (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0);
   if (joy.active && Math.hypot(joy.x, joy.y) > 0.12) { thr += joy.y; steer -= joy.x; }
+  if (tour.active && (thr || steer) && tour.phase !== 'paused' && tour.phase !== 'finale') tourPause();
   if (state.auto) {
     if (thr === 0 && steer === 0) return autopilot(dt);
     cancelCourse();
@@ -737,6 +855,7 @@ function getInput(dt) {
 }
 
 function respawn() {
+  endTour();
   closePanel(); closeMapOverlay(); cancelCourse();
   boat.x = home.dockX; boat.z = home.dockZ; boat.h = Math.atan2(home.pierX, home.pierZ);
   boat.vx = boat.vz = boat.turn = 0;
@@ -744,21 +863,6 @@ function respawn() {
 }
 ui.harbor.addEventListener('click', () => { respawn(); ui.harbor.blur(); });
 ui.dockBtn.addEventListener('click', () => { if (state.auto) cancelCourse(); else openPanel(state.near); });
-
-function start() {
-  if (state.mode !== 'intro') return;
-  state.mode = 'sail';
-  if (hudEl) hudEl.inert = false;
-  state.camBlend = reduceMotion ? 60 : 0.45;
-  document.body.classList.remove('is-intro');
-  ui.intro.classList.add('gone');
-  ui.intro.setAttribute('aria-hidden', 'true');
-  if (document.activeElement) document.activeElement.blur();
-  setTimeout(() => { ui.intro.hidden = true; }, 950);
-  if (touchMode) toast('<strong>Push the wheel to sail</strong>Up goes forward, sideways turns. Or open the map in the top corner and tap an island.', 6500);
-  else { ui.hint.classList.add('show'); setTimeout(() => ui.hint.classList.remove('show'), 11000); }
-}
-ui.start.addEventListener('click', start);
 
 /* =================================================================
    SIMULATION
@@ -914,27 +1018,64 @@ function updateAmbient(dt) {
 
 /* ---------- camera ---------- */
 const desired = new THREE.Vector3(), lookAt = new THREE.Vector3(0, 5, 20), lookDesired = new THREE.Vector3();
-function updateCamera(dt) {
-  if (state.mode === 'intro') {
-    const a = (reduceMotion ? 0 : time * 0.05) + 0.9;
-    camera.position.set(Math.sin(a) * 82, 44, Math.cos(a) * 82);
-    camera.lookAt(lookAt);
-    return;
+/* the tallest tree tops out around y 11; every landmark fits within 4.5 of its island's centre */
+const TREELINE = 13, LANDMARK_R = 5.5;
+const smooth = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+/* the slow orbit behind the intro; also where the camera starts, even if "Set sail" was
+   pressed before the first frame, so the chase camera always swoops in from here */
+function introShot() {
+  const a = (reduceMotion ? 0 : time * 0.05) + 0.9;
+  camera.position.set(Math.sin(a) * 82, 44, Math.cos(a) * 82);
+  camera.lookAt(lookAt);
+}
+introShot();
+/* Over an island, rise above it rather than being pushed in against the boat (which used
+   to leave the first shot after "Set sail" staring down the mast). The climb starts at the
+   shoreline so the camera glides up instead of jumping: just over the treeline across most
+   of the island, and over the landmark only near the middle, which keeps the horizon in view. */
+function keepCameraClear() {
+  for (const isl of islands) {
+    const d = Math.hypot(camera.position.x - isl.x, camera.position.z - isl.z), reach = isl.r * 1.25 + 2;
+    if (d >= reach) continue;
+    const trees = lerp(4, TREELINE, smooth((1 - d / reach) * 1.6));
+    const need = d < LANDMARK_R ? lerp(trees, isl.labelY + 2, smooth(1 - d / LANDMARK_R)) : trees;
+    camera.position.y = Math.max(camera.position.y, need);
   }
+  camera.position.y = Math.max(camera.position.y, waveH(camera.position.x, camera.position.z, time) + 2.5);
+}
+/* the tour's showcase: a slow orbit round the island, framing the landmark and the boat
+   at its pier together (wider and higher for the finale, to fit the fireworks in) */
+function orbitPose(isl, a, wide, out) {
+  const tall = view.h > view.w ? 1.45 : 1;   /* a portrait screen is narrow: stand further back */
+  const R = (wide ? isl.r * 3.2 + 36 : isl.r * 2.1 + 17) * tall, H = (wide ? 24 : 11 + isl.r * 0.45) * (tall > 1 ? 1.2 : 1);
+  return out.set(isl.x + Math.cos(a) * R, H, isl.z + Math.sin(a) * R);
+}
+function tourShot(dt) {
+  const wide = tour.phase === 'finale', isl = tour.stops[tour.i].isl;
+  if (!reduceMotion) tour.orbitA += dt * (wide ? 0.09 : 0.075);
+  orbitPose(isl, tour.orbitA, wide, desired);
+  camera.position.lerp(desired, damp(wide ? 1.1 : 1.6, dt));
+  keepCameraClear();
+  const toBoat = view.h > view.w ? 0.5 : 0.35;
+  lookDesired.set(lerp(isl.x, boat.x, toBoat), wide ? 19 : isl.labelY * 0.35 + 1.5, lerp(isl.z, boat.z, toBoat));
+  lookAt.lerp(lookDesired, damp(2.2, dt));
+  camera.lookAt(lookAt);
+}
+function updateCamera(dt) {
+  if (state.mode === 'intro') { introShot(); return; }
+  if (tour.active && ['show', 'read', 'finale'].includes(tour.phase)) { tourShot(dt); return; }
   cam.heading = lerpAngle(cam.heading, boat.h, damp(2.2, dt));
   const fx = Math.sin(cam.heading), fz = Math.cos(cam.heading);
   const portrait = view.h > view.w;
-  const dist = cam.dist + Math.hypot(boat.vx, boat.vz) * 0.14 + (portrait ? 5 : 0);
+  /* on tour legs, pull back a little and look a little higher, so the lookout stays in shot */
+  const touring = tour.active && tour.phase === 'sail';
+  const dist = cam.dist + Math.hypot(boat.vx, boat.vz) * 0.14 + (portrait ? 5 : 0) + (touring ? 4 : 0);
   desired.set(boat.x - fx * dist, boat.y + 4 + dist * 0.32, boat.z - fz * dist);
   state.camBlend = Math.min(state.camBlend > 5 ? state.camBlend : 4.5, state.camBlend + dt * 1.2);
   const k = damp(state.camBlend, dt);
   camera.position.lerp(desired, k);
-  for (const isl of islands) {
-    const dx = camera.position.x - isl.x, dz = camera.position.z - isl.z, d = Math.hypot(dx, dz), min = isl.r * 1.25 + 2;
-    if (d < min && camera.position.y < 26 && d > 1e-4) { camera.position.x = isl.x + dx / d * min; camera.position.z = isl.z + dz / d * min; }
-  }
-  camera.position.y = Math.max(camera.position.y, waveH(camera.position.x, camera.position.z, time) + 2.5);
-  lookDesired.set(boat.x + fx * 6, boat.y + 1.8, boat.z + fz * 6);
+  keepCameraClear();
+  lookDesired.set(boat.x + fx * 6, boat.y + (touring ? 3.4 : 1.8), boat.z + fz * 6);
   lookAt.lerp(lookDesired, Math.min(1, k * 1.6));
   state.shake *= Math.exp(-6 * dt);
   if (state.shake > 0.01) {
@@ -1140,8 +1281,282 @@ onViewportChange(onResize, onResizeSettled);
 onResize();
 onResizeSettled();
 
+/* =================================================================
+   GUIDED TOUR
+   A lookout climbs into a crow's nest and sails the visitor round every island: he
+   points the way on each leg, and at each stop the camera circles the island, a title
+   card sweeps in, he says his piece, and the island's panel opens. Fireworks at the end.
+   Phases: 'sail' (autopilot leg) → 'show' (arrival) → 'read' (panel open) → next leg;
+   'paused' when the visitor takes the helm; 'finale' after the last stop.
+   ================================================================= */
+const TOUR = CONTENT.tour || { stops: [] };
+tour.stops = TOUR.stops.map((st) => ({ isl: islands.find((i) => i.def.id === st.id), line: st.line })).filter((st) => st.isl);
+ui.tourDots.innerHTML = tour.stops.map((st) => `<li style="--c:${st.isl.def.color}"></li>`).join('');
+const dots = Array.from(ui.tourDots.children);
+const SHOW_MIN = 3.2;    /* seconds of showcase before the panel opens... */
+const READ_PAUSE = 2;    /* ...and at least this long after he finishes his line, so it can be read */
+
+function beginTour() {
+  if (!tour.stops.length || state.dead) return;
+  tour.pending = false;
+  if (tour.active) return;
+  tour.active = true;
+  tour.mapWas = SM.open;
+  if (SM.open) setScroll(false);   /* clear the view for the tour; endTour() unrolls it again */
+  closePanel(); cancelCourse();
+  ui.hint.classList.remove('show');
+  ui.tour.hidden = false;
+  requestAnimationFrame(() => {
+    document.body.classList.add('touring');
+    document.documentElement.style.setProperty('--tour-h', `${ui.tour.offsetHeight}px`);
+  });
+  $$('.chipbtn-tour').forEach((b) => { b.setAttribute('aria-pressed', 'true'); b.querySelector('[data-tour-label]').textContent = 'End tour'; });
+  lookout.show();
+  tour.pFrom = 0;
+  goStop(0);
+}
+function endTour() {
+  if (!tour.active) return;
+  tour.active = false; tour.phase = 'idle';
+  cancelCourse();
+  say(null); hideCard();
+  lookout.hide(); lookout.pose('rest'); lookout.face(0);
+  document.body.classList.remove('touring');
+  setTimeout(() => { if (!tour.active) ui.tour.hidden = true; }, 600);
+  $$('.chipbtn-tour').forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.querySelector('[data-tour-label]').textContent = 'Tour'; });
+  if (ui.tour.contains(document.activeElement)) document.activeElement.blur();
+  state.camBlend = Math.min(state.camBlend, 1.2);   /* glide back to the chase camera */
+  if (tour.mapWas && !SM.open && !isNarrow()) setScroll(true);
+}
+function goStop(i) {
+  tour.pFrom = tourProgress();
+  tour.i = clamp(i, 0, tour.stops.length - 1);
+  tour.t = 0;
+  const { isl } = tour.stops[tour.i];
+  if (state.panel) closePanel();
+  hideCard();
+  const dist = Math.hypot(isl.dockX - boat.x, isl.dockZ - boat.z);
+  if (dist < 7) { tour.phase = 'sail'; tourArrive(isl); return; }
+  tour.phase = 'sail';
+  tour.legFrom = dist;
+  state.camBlend = Math.min(state.camBlend, 1.2);
+  sailTo(isl);
+  lookout.pose('point');
+  const cheer = TOUR.sailing && TOUR.sailing.length ? `${TOUR.sailing[tour.i % TOUR.sailing.length]} ` : '';
+  say(`${cheer}Next stop: ${isl.def.title}.`, 3);
+  renderTourBar();
+}
+function tourArrive(isl) {
+  cancelCourse();
+  tour.phase = 'show'; tour.t = 0; tour.doneAt = -1;
+  boat.vx *= 0.2; boat.vz *= 0.2;
+  tour.orbitA = Math.atan2(camera.position.z - isl.z, camera.position.x - isl.x);
+  lookout.pose('spyglass');
+  say(tour.stops[tour.i].line);
+  showCard(isl);
+  fireworks.burst(isl.x, isl.labelY - 1, isl.z, [isl.def.color, '#ffffff', '#f5c518'], { count: 90, speed: 9, size: 0.7, span: 1.2 });
+  markVisited(isl);
+  renderTourBar();
+}
+function tourPause() {
+  tour.phase = 'paused'; tour.t = 0;
+  cancelCourse(); hideCard();
+  if (state.panel) closePanel();
+  lookout.pose('rest');
+  say(TOUR.paused || 'You have the helm.', 4);
+  renderTourBar();
+}
+function finale() {
+  if (state.panel) closePanel();
+  hideCard();
+  const isl = tour.stops[tour.i].isl;
+  tour.phase = 'finale'; tour.t = 0; tour.shots = 0;
+  tour.orbitA = Math.atan2(camera.position.z - isl.z, camera.position.x - isl.x);
+  lookout.pose('cheer');
+  say(TOUR.finale || 'That’s the tour!');
+  renderTourBar();
+}
+function tourNext() {
+  if (!tour.active) return;
+  if (tour.phase === 'sail') skipAhead();
+  else if (tour.phase === 'paused') goStop(tour.i);
+  else if (tour.phase === 'finale') endTour();
+  else if (tour.i < tour.stops.length - 1) goStop(tour.i + 1);
+  else finale();
+}
+function tourPrev() { if (tour.active && tour.i > 0 && tour.phase !== 'finale') goStop(tour.i - 1); }
+ui.tourNext.addEventListener('click', tourNext);
+ui.tourPrev.addEventListener('click', tourPrev);
+ui.tourEnd.addEventListener('click', endTour);
+
+/* "Skip ahead": a quick fade, and the boat is tied up at the next pier */
+function skipAhead() {
+  const isl = tour.stops[tour.i].isl;
+  fade(() => {
+    if (!tour.active) return;
+    cancelCourse();
+    boat.x = isl.dockX; boat.z = isl.dockZ; boat.h = Math.atan2(isl.pierX, isl.pierZ);
+    boat.vx = boat.vz = boat.turn = 0;
+    cam.heading = boat.h;
+    const a = Math.atan2(isl.pierZ, isl.pierX) + 0.75;
+    orbitPose(isl, a, false, camera.position);
+    lookAt.set(isl.x, isl.labelY * 0.35 + 1.5, isl.z);
+    tourArrive(isl);
+    tour.orbitA = a;
+  });
+}
+function fade(fn) {
+  if (reduceMotion) { fn(); return; }
+  ui.fader.classList.add('on');
+  setTimeout(() => { fn(); requestAnimationFrame(() => ui.fader.classList.remove('on')); }, 300);
+}
+
+/* ---------- the lookout's lines: typed into a bubble that hangs over his head ---------- */
+const typed = document.createElement('span'), untyped = document.createElement('span');
+untyped.className = 'tb-ghost';   /* the rest of the line, invisible, so the bubble never changes size */
+ui.bubbleText.append(typed, untyped);
+function say(text, hold = 0) {
+  if (!text) { tour.say = null; ui.bubble.classList.remove('show'); lookout.talk(false); return; }
+  tour.say = { text, n: reduceMotion ? text.length : 0, hold, t: 0, w: 0, h: 0 };
+  typed.textContent = reduceMotion ? text : '';
+  untyped.textContent = reduceMotion ? '' : text;
+  ui.tourLive.textContent = text;
+  tour.say.w = ui.bubble.offsetWidth; tour.say.h = ui.bubble.offsetHeight;
+}
+function updateSay(dt) {
+  const sp = tour.say;
+  if (!sp || !lookout.shown) return;
+  if (sp.n < sp.text.length) {
+    sp.n = Math.min(sp.text.length, sp.n + dt * 40);
+    const cut = Math.floor(sp.n);
+    typed.textContent = sp.text.slice(0, cut); untyped.textContent = sp.text.slice(cut);
+    lookout.talk(sp.n < sp.text.length);
+  } else if (sp.hold && (sp.t += dt) > sp.hold) say(null);
+}
+const _bp = new THREE.Vector3();
+function updateBubble() {
+  const sp = tour.say;
+  /* on a phone the open panel covers the boat, so the bubble steps aside */
+  const hidden = !sp || !lookout.shown || (state.panel && isNarrow());
+  if (!hidden) {
+    lookout.anchor.getWorldPosition(_bp); _bp.project(camera);
+    const sx = (_bp.x * 0.5 + 0.5) * view.w;
+    const underPanel = state.panel && !isNarrow() && sx > view.w - 12 - Math.min(460, view.w - 24);
+    if (_bp.z < 1 && Math.abs(_bp.x) < 1.1 && Math.abs(_bp.y) < 1.1 && !underPanel) {
+      const x = (_bp.x * 0.5 + 0.5) * view.w, y = (-_bp.y * 0.5 + 0.5) * view.h;
+      /* with the side panel open, the usable width ends at the panel's left edge */
+      const right = state.panel && !isNarrow() ? view.w - 12 - Math.min(460, view.w - 24) : view.w;
+      const cx = clamp(x, sp.w / 2 + 12, right - sp.w / 2 - 12), cy = Math.max(y - 10, sp.h + 12);
+      ui.bubble.style.setProperty('--tail', `${clamp(x - cx, -sp.w / 2 + 20, sp.w / 2 - 20).toFixed(1)}px`);
+      ui.bubble.style.transform = `translate3d(${cx.toFixed(1)}px,${cy.toFixed(1)}px,0) translate(-50%,-100%)`;
+      ui.bubble.classList.add('show');
+      return;
+    }
+  }
+  ui.bubble.classList.remove('show');
+}
+
+/* ---------- title card, tour bar ---------- */
+function showCard(isl) {
+  ui.cardKicker.textContent = `Stop ${tour.i + 1} of ${tour.stops.length}`;
+  ui.cardTitle.textContent = isl.def.title;
+  ui.cardSub.textContent = isl.def.sub;
+  ui.card.style.setProperty('--c', isl.def.color);
+  ui.card.classList.remove('show'); void ui.card.offsetWidth; ui.card.classList.add('show');
+  document.body.classList.add('titling');   /* the island's own label would show through the title */
+}
+function hideCard() { ui.card.classList.remove('show'); document.body.classList.remove('titling'); }
+ui.card.addEventListener('animationend', (e) => { if (e.target === ui.card) document.body.classList.remove('titling'); });
+function renderTourBar() {
+  const n = tour.stops.length, ph = tour.phase, st = tour.stops[tour.i];
+  ui.tourKicker.textContent = ph === 'sail' ? `Sailing · ${tour.i + 1} of ${n}`
+    : ph === 'paused' ? 'Tour paused' : ph === 'finale' ? 'Tour complete' : `Stop ${tour.i + 1} of ${n}`;
+  ui.tourTitle.textContent = ph === 'finale' ? 'Bon voyage!' : st.isl.def.title;
+  ui.tourNextLabel.textContent = ph === 'sail' ? 'Skip ahead' : ph === 'paused' ? 'Resume tour'
+    : ph === 'finale' ? 'Sail freely' : tour.i === n - 1 ? 'Finish' : 'Next stop';
+  ui.tourPrev.disabled = tour.i === 0 || ph === 'finale';
+  dots.forEach((li, j) => {
+    li.classList.toggle('done', j < tour.i || ph === 'finale' || (j === tour.i && ph !== 'sail'));
+    li.classList.toggle('here', j === tour.i && ph !== 'finale');
+  });
+}
+/* 0..1 along the route: between the last stop and the next one while sailing */
+function tourProgress() {
+  const n = Math.max(1, tour.stops.length - 1);
+  if (!tour.active) return 0;
+  if (tour.phase === 'finale') return 1;
+  const at = tour.i / n;
+  if (tour.phase !== 'sail') return at;
+  const { isl } = tour.stops[tour.i];
+  const leg = clamp(1 - Math.hypot(isl.dockX - boat.x, isl.dockZ - boat.z) / tour.legFrom, 0, 1);
+  return lerp(tour.pFrom, at, leg);
+}
+let shownProgress = -1;
+function updateTourBar() {
+  const p = Math.round(tourProgress() * 1000) / 1000;
+  if (p === shownProgress) return;
+  shownProgress = p;
+  ui.tourFill.style.width = `${p * 100}%`;
+  ui.tourBoat.style.left = `calc(6px + (100% - 12px) * ${p})`;
+}
+
+/* ---------- per frame ---------- */
+const FINALE_SHOTS = [0.5, 1.1, 1.6, 2.2, 2.7, 3.3, 3.8, 4.4, 4.6, 4.8];
+const PALETTE_FW = CONTENT.islands.map((i) => i.color).concat(['#ffffff', '#f5c518']);
+function updateTour(dt) {
+  if (!tour.active) return;
+  tour.t += dt;
+  const { isl } = tour.stops[tour.i];
+  /* he watches where you're heading while sailing, and the island once you're there */
+  if (tour.phase === 'paused') lookout.face(0);
+  else {
+    const tx = tour.phase === 'sail' ? isl.dockX : isl.x, tz = tour.phase === 'sail' ? isl.dockZ : isl.z;
+    lookout.face(angDiff(boat.h, Math.atan2(tx - boat.x, tz - boat.z)));
+  }
+  if (tour.phase === 'show') {
+    if (tour.t > 1.6) lookout.pose('wave');
+    if (tour.doneAt < 0 && tour.say && tour.say.n >= tour.say.text.length) tour.doneAt = tour.t;
+    if ((tour.doneAt >= 0 && tour.t > Math.max(SHOW_MIN, tour.doneAt + READ_PAUSE)) || tour.t > 10) {
+      tour.phase = 'read'; tour.t = 0;
+      openPanel(isl, { n: tour.i + 1, of: tour.stops.length });
+      renderTourBar();
+    }
+  } else if (tour.phase === 'read' && tour.t > 1.5) lookout.pose('rest');
+  else if (tour.phase === 'finale') {
+    /* rockets go up from the tower in a rising rhythm, then a closing volley */
+    while (tour.shots < FINALE_SHOTS.length && tour.t > FINALE_SHOTS[tour.shots]) {
+      const k = tour.shots++, a = k * 2.4, r = 8 + (k % 3) * 7, big = k >= FINALE_SHOTS.length - 3;
+      const c1 = PALETTE_FW[k % PALETTE_FW.length], c2 = PALETTE_FW[(k * 3 + 2) % PALETTE_FW.length];
+      if (!reduceMotion) {
+        fireworks.launch({ x: isl.x, y: isl.labelY - 2, z: isl.z },
+          { x: isl.x + Math.cos(a) * r, y: 30 + (k % 4) * 5 + (big ? 6 : 0), z: isl.z + Math.sin(a) * r },
+          [c1, c2, '#ffffff'], { count: big ? 220 : 150, speed: big ? 19 : 15, size: big ? 1.3 : 1.1, dur: 0.9 + (k % 2) * 0.2 });
+      }
+    }
+    if (tour.t > 6.8) lookout.pose('wave');
+    if (tour.t > 9.5) {
+      endTour();
+      toast(`<strong>Tour complete</strong>The helm is yours. ${touchMode ? 'Tap Tour' : 'Press T'} any time to go round again.`, 5200);
+      return;
+    }
+  }
+  updateSay(dt);
+  updateTourBar();
+}
+
+/* while the tour has a panel open on a wide screen, slide the view left so the island
+   sits in the space beside the panel rather than behind it */
+let viewShift = 0;
+function updateViewShift(dt) {
+  const target = tour.active && state.panel && view.w >= 900 ? (Math.min(460, view.w - 24) + 12) / 2 : 0;
+  if (target === viewShift) return;
+  viewShift = Math.abs(target - viewShift) < 0.5 ? target : lerp(viewShift, target, damp(3, dt));
+  if (viewShift) camera.setViewOffset(view.w, view.h, viewShift, 0, view.w, view.h);
+  else camera.clearViewOffset();
+}
+
 /* ---------- main loop ---------- */
-let last = performance.now();
+let last = performance.now(), drawn = false;
 const perf = { acc: 0, n: 0, warm: 0, pr: renderer.getPixelRatio() };
 function adaptQuality(dt) {
   if ((perf.warm += dt) < 4) return;
@@ -1154,7 +1569,9 @@ function frame(now) {
   if (state.dead) return;
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
-  if (state.plain || state.resume) return; /* the scene is fully covered, so skip the work */
+  /* the scene is fully covered, so skip the work (after the first frame, which compiles
+     the shaders while the visitor is reading rather than when they close the page) */
+  if ((state.plain || state.resume) && drawn) return;
   time += dt;
   adaptQuality(dt);
   stepSky(dt);
@@ -1167,17 +1584,25 @@ function frame(now) {
   updateBottles(dt);
   updateAmbient(dt);
   for (const f of animators) f(time, dt);
+  updateTour(dt);
+  lookout.update(dt, time, reduceMotion);
+  fireworks.update(dt);
   updateCamera(dt);
+  updateViewShift(dt);
   const fx = state.mode === 'intro' ? 0 : boat.x, fz = state.mode === 'intro' ? 10 : boat.z;
   water.position.set(Math.round(fx / WSTEP) * WSTEP, 0, Math.round(fz / WSTEP) * WSTEP);
   sun.position.set(fx + SUN_OFF.x, SUN_OFF.y, fz + SUN_OFF.z);
   sun.target.position.set(fx, 0, fz);
   sky.position.copy(camera.position); stars.position.copy(camera.position);
   updateProximity();
+  fireworks.resize(ui.canvas.height);
   renderer.render(scene, camera);
+  if (!drawn) { drawn = true; ui.canvas.classList.add('ready'); }
   updateLabels();
+  updateBubble();
   updateScroll(dt);
 }
+worldReady = true;
+if (tour.pending) beginTour();
 requestAnimationFrame(frame);
-ui.start.focus({ preventScroll: true });
 })();

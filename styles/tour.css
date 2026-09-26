@@ -1,0 +1,110 @@
+/*
+ * The guided tour: entry buttons, the tour bar with its route track, the lookout's
+ * speech bubble, the island title card, and the fade used by "Skip ahead".
+ */
+/* ---------- ways in ---------- */
+.btn .ico,.chipbtn .ico{width:20px;height:20px;flex:none}
+.btn-ghost{color:#fff;border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-ghost .ico{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.btn-ghost:hover .ico{transform:rotate(200deg)}
+.chipbtn-tour{display:inline-flex;align-items:center;gap:6px}
+.chipbtn-tour .ico{width:16px;height:16px}
+.chipbtn-tour[aria-pressed="true"]{background:var(--ink);color:var(--chart)}
+body.no-webgl [data-tour-start],body.touring .pc [data-tour-start]{display:none}
+
+/* ---------- tour bar ---------- */
+.tour{position:fixed;left:0;right:0;bottom:max(20px,env(safe-area-inset-bottom));margin:0 auto;z-index:9;width:min(600px,calc(100% - 24px));
+  padding:12px 12px 12px 18px;border-radius:18px;background:var(--chart);color:var(--ink);box-shadow:var(--shadow);
+  opacity:0;transform:translateY(calc(100% + 30px));transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .3s,right .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1)}
+body.touring .tour{opacity:1;transform:none}
+.tour-top{display:flex;align-items:center;gap:12px}
+.tour-where{flex:1;min-width:0}
+.tour-kicker{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tour-title{display:block;font-family:var(--display);font-weight:800;font-size:29px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tour-actions{display:flex;align-items:center;gap:8px;flex:none}
+.tour-icon{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.tour-icon:hover{background:var(--chart-2)}
+.tour-icon:disabled{opacity:.35;cursor:default;background:transparent}
+.tour-icon svg{width:16px;height:16px}
+.tour-next{gap:6px;white-space:nowrap}
+.tour-next svg{width:14px;height:14px;flex:none}
+
+/* the route: one pennant-coloured stop per island, and a little boat riding the rail */
+.tour-track{position:relative;height:16px;margin:14px 4px 2px}
+.tour-rail{position:absolute;left:6px;right:6px;top:6px;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.tour-fill{width:0;height:100%;border-radius:2px;background:var(--signal)}
+.tour-dots{position:absolute;inset:0;display:flex;justify-content:space-between;margin:0;padding:0;list-style:none}
+.tour-dots li{width:12px;height:12px;margin-top:2px;border-radius:50%;border:3px solid var(--c);background:var(--chart);transition:transform .35s cubic-bezier(.2,1.6,.4,1),background-color .3s}
+.tour-dots li.done{background:var(--c)}
+.tour-dots li.here{transform:scale(1.5);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 35%,transparent)}
+.tour-boat{position:absolute;top:-17px;left:6px;width:22px;height:22px;transform:translateX(-50%);filter:drop-shadow(0 2px 3px rgba(6,28,42,.35))}
+.tour-boat svg{display:block;width:100%;height:100%;animation:tourBob 1.6s ease-in-out infinite}
+@keyframes tourBob{50%{transform:translateY(-2px) rotate(-5deg)}}
+
+/* while a title card plays, the floating island labels fade out underneath it */
+body.titling #labels{opacity:0}
+/* keep clear of the tour: the dock card and hint step aside, the wheel is put away */
+body.touring .dock,body.touring .hint{opacity:0 !important;pointer-events:none !important}
+body.touring .joystick{display:none}
+
+/* the stop label on an island's panel */
+.pc-tour{display:inline-block;margin:0 0 12px;padding:4px 10px;border-radius:999px;background:var(--chart-2);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- speech bubble ---------- */
+.tour-bubble{--tail:0px;position:fixed;left:0;top:0;z-index:7;max-width:min(300px,calc(100vw - 32px));padding:9px 14px 12px;border-radius:16px;
+  background:#fffdf6;color:#14212b;box-shadow:0 16px 40px -14px rgba(6,28,42,.6);font-size:15px;line-height:1.38;pointer-events:none;
+  opacity:0;scale:.86;transform-origin:50% 100%;transition:opacity .22s,scale .4s cubic-bezier(.2,1.5,.4,1);will-change:transform}
+.tour-bubble.show{opacity:1;scale:1}
+.tour-bubble::after{content:'';position:absolute;left:calc(50% + var(--tail));bottom:-9px;margin-left:-9px;border:9px solid transparent;border-bottom:0;border-top-color:#fffdf6}
+.tb-name{display:block;margin-bottom:2px;font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#a8322d}
+.tb-ghost{visibility:hidden}
+
+/* ---------- island title card ---------- */
+.tour-card{--c:#f5c518;position:fixed;left:0;right:0;top:13vh;z-index:6;display:flex;flex-direction:column;align-items:center;padding:0 16px;
+  text-align:center;color:#fff;text-shadow:0 3px 26px rgba(6,22,34,.6),0 1px 2px rgba(6,22,34,.4);pointer-events:none;opacity:0}
+.tc-kicker{font-size:13px;font-weight:700;letter-spacing:.32em;text-transform:uppercase}
+.tc-title{font-family:var(--display);font-weight:800;font-size:clamp(54px,10vw,128px);line-height:.86;letter-spacing:.02em;text-transform:uppercase;max-width:100%;overflow-wrap:break-word}
+.tc-rule{width:0;height:4px;margin:14px 0 10px;border-radius:2px;background:var(--c);box-shadow:0 2px 14px rgba(0,0,0,.3)}
+.tc-sub{font-size:clamp(16px,1.8vw,20px);font-weight:700}
+.tour-card.show{animation:tcFade 3.1s ease forwards}
+.tour-card.show .tc-title{animation:tcTitle 3.1s cubic-bezier(.2,.8,.2,1) forwards}
+.tour-card.show .tc-rule{animation:tcRule 3.1s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes tcFade{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}
+@keyframes tcTitle{0%{letter-spacing:.34em;filter:blur(8px)}28%{letter-spacing:.02em;filter:blur(0)}100%{letter-spacing:.05em;filter:blur(0)}}
+@keyframes tcRule{0%{width:0}32%{width:min(240px,46vw)}100%{width:min(300px,56vw)}}
+
+/* ---------- "Skip ahead" ---------- */
+.fader{position:fixed;inset:0;z-index:11;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .28s ease}
+.fader.on{opacity:1}
+
+/* ---------- layout around the panel ---------- */
+/* wide screens: the panel sits on the right, so centre the bar in the space beside it */
+@media (min-width:900px){
+  body.touring.panel-open .tour{right:484px;width:min(600px,calc(100% - 508px))}
+}
+@media (min-width:641px) and (max-width:899px){
+  body.touring .panel{padding-bottom:140px}
+}
+/* phones: the panel becomes a sheet sitting just above the bar */
+@media (max-width:640px){
+  .tour{bottom:max(10px,env(safe-area-inset-bottom));width:calc(100% - 20px);padding:10px 10px 10px 14px;border-radius:16px}
+  #tour-title{font-size:23px}
+  .tour-icon{width:38px;height:38px}
+  .tour-next{padding:9px 14px}
+  body.touring .panel{bottom:calc(var(--tour-h,118px) + max(10px,env(safe-area-inset-bottom)) + 8px);max-height:calc(80dvh - var(--tour-h,118px));
+    left:10px;right:10px;width:auto;border-radius:20px;padding-bottom:26px}
+  .tour-kicker{font-size:11px;letter-spacing:.05em}
+  /* the header controls stack up on a phone and the lookout's bubble sits mid-screen,
+     so the title card takes the open water just above the tour bar */
+  .tour-card{top:auto;bottom:calc(var(--tour-h,118px) + max(10px,env(safe-area-inset-bottom)) + 30px)}
+  .tc-title{font-size:clamp(44px,12.5vw,128px)}
+  .tour-bubble{font-size:14px}
+}
+@media (prefers-reduced-motion: reduce){
+  .tour,.fader,.tour-bubble{transition-duration:.01s !important}
+  .tour-card.show{animation:tcFade 2.6s linear forwards}
+  .tour-card.show .tc-title,.tour-card.show .tc-rule{animation:none}
+  .tc-rule{width:min(260px,50vw)}
+  .tour-boat svg,.btn-ghost .ico{animation:none;transition:none}
+}

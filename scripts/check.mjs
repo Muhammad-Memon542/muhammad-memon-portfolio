@@ -3,7 +3,7 @@
  *
  * There's no build step to catch mistakes, so this stands in for one:
  *   1. every .js/.mjs file parses
- *   2. every local asset referenced by index.html actually exists
+ *   2. every local asset referenced by index.html actually exists, and every module is preloaded
  *   3. the manifest's icons exist
  *   4. the resume filename in content.js matches the PDF that ships in assets/
  *   5. the pre-rendered name/role/tagline in index.html still match content.js
@@ -67,6 +67,15 @@ for (const ref of refs) {
   if (!(await exists(join(ROOT, ref)))) { bad(`missing file referenced by index.html: ${ref}`); missing++; }
 }
 if (!missing) ok(`${refs.size} local references resolve`);
+
+// Every app module should be preloaded; one that isn't is only discovered after the
+// module importing it has downloaded and parsed, which costs an extra round trip.
+{
+  const modules = scripts.map((f) => relative(ROOT, f).split('\\').join('/')).filter((f) => f.startsWith('src/'));
+  const unloaded = modules.filter((m) => !html.includes(`rel="modulepreload" href="${m}"`));
+  for (const m of unloaded) bad(`index.html has no <link rel="modulepreload"> for ${m}`);
+  if (!unloaded.length) ok(`all ${modules.length} modules in src/ are preloaded`);
+}
 
 // ------------------------------------------------------------- 3. manifest icons
 console.log('\nWeb app manifest');

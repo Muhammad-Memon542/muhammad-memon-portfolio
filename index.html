@@ -48,6 +48,7 @@
 <link rel="stylesheet" href="styles/base.css" />
 <link rel="stylesheet" href="styles/hud.css" />
 <link rel="stylesheet" href="styles/overlays.css" />
+<link rel="stylesheet" href="styles/tour.css" />
 <link rel="stylesheet" href="styles/reader.css" />
 <link rel="stylesheet" href="styles/responsive.css" />
 
@@ -62,6 +63,9 @@
 <link rel="modulepreload" href="src/scene/palette.js" />
 <link rel="modulepreload" href="src/scene/flotsam.js" />
 <link rel="modulepreload" href="src/scene/wildlife.js" />
+<link rel="modulepreload" href="src/scene/quality.js" />
+<link rel="modulepreload" href="src/scene/lookout.js" />
+<link rel="modulepreload" href="src/scene/fireworks.js" />
 
 <script type="application/ld+json">
 {
@@ -95,6 +99,7 @@
     <p class="brand-role" data-role>Statistics &amp; machine learning</p>
     <div class="hud-actions">
       <button class="chipbtn chipbtn-primary" data-open-resume type="button">Resume</button>
+      <button class="chipbtn chipbtn-tour" data-tour-start type="button" aria-pressed="false"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13.4 6.6l-2.1 4.7-4.7 2.1 2.1-4.7z" fill="currentColor"/></svg><span data-tour-label>Tour</span></button>
       <button class="chipbtn" id="harbor-btn" type="button">Return to harbor</button>
       <button class="chipbtn" data-open-plain type="button">Read as a page</button>
     </div>
@@ -135,6 +140,26 @@
   <button id="dock-btn" class="btn btn-primary" type="button"><span id="dock-btn-label">Go ashore</span> <kbd id="dock-kbd" class="only-desktop">Enter</kbd></button>
 </div>
 
+<section id="tour" class="tour" aria-label="Guided tour" hidden>
+  <div class="tour-top">
+    <div class="tour-where"><span class="tour-kicker" id="tour-kicker">Guided tour</span><strong id="tour-title"></strong></div>
+    <div class="tour-actions">
+      <button id="tour-prev" class="tour-icon" type="button" aria-label="Previous stop"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="tour-next" class="btn btn-primary tour-next" type="button"><span id="tour-next-label">Next stop</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="tour-end" class="tour-icon" type="button" aria-label="End the tour"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+  <div class="tour-track" aria-hidden="true">
+    <div class="tour-rail"><div class="tour-fill" id="tour-fill"></div></div>
+    <ol class="tour-dots" id="tour-dots"></ol>
+    <span class="tour-boat" id="tour-boat"><svg viewBox="0 0 24 24"><path d="M12 2.5v13.2H4.2z" fill="#f7f2e8"/><path d="M13.3 5.5l6 10.2h-6z" fill="#f7f2e8"/><path d="M2.5 17.2h19l-2.6 4.3H5.3z" fill="#1d3b56"/></svg></span>
+  </div>
+  <p id="tour-live" class="sr-only" aria-live="polite"></p>
+</section>
+<div id="tour-bubble" class="tour-bubble" aria-hidden="true"><span class="tb-name">The Captain</span><span id="tour-bubble-text" class="tb-text"></span></div>
+<div id="tour-card" class="tour-card" aria-hidden="true"><span class="tc-kicker" id="tour-card-kicker"></span><strong class="tc-title" id="tour-card-title"></strong><span class="tc-rule"></span><span class="tc-sub" id="tour-card-sub"></span></div>
+<div id="fader" class="fader" aria-hidden="true"></div>
+
 <aside id="panel" class="panel" role="dialog" aria-modal="false" aria-labelledby="panel-title" aria-hidden="true" tabindex="-1">
   <button class="panel-close" id="panel-close" type="button" aria-label="Close and return to the boat">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -153,12 +178,13 @@
     <p class="intro-tag" data-tagline>I study statistics at the University of Toronto and build machine-learning tools. Sail between the islands to see what I’ve been working on.</p>
     <div class="intro-actions">
       <button id="start" class="btn btn-primary btn-big" type="button">Set sail</button>
+      <button class="btn btn-ghost btn-big" data-tour-start type="button"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13.4 6.6l-2.1 4.7-4.7 2.1 2.1-4.7z" fill="currentColor"/></svg>Take the guided tour</button>
       <button class="linkbtn" data-open-resume type="button">Open my resume</button>
       <button class="linkbtn" data-open-plain type="button">Read it as a regular page</button>
     </div>
     <p class="intro-controls">
-      <span class="only-desktop">Sail with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys and press <kbd>Enter</kbd> near an island to go ashore. Or click any island on the map and the boat sails there for you.</span>
-      <span class="only-touch">Steer with the wheel in the bottom corner, or open the map in the top corner and tap an island to sail there.</span>
+      <span class="only-desktop">New here? The guided tour sails you round every island in about two minutes. Or take the helm with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys, and press <kbd>Enter</kbd> near an island to go ashore.</span>
+      <span class="only-touch">New here? The guided tour sails you round every island in about two minutes. Or steer with the wheel, or tap an island on the map to sail there.</span>
     </p>
   </div>
 </section>
