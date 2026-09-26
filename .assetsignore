@@ -1,0 +1,19 @@
+# Files Wrangler must not publish (gitignore syntax).
+#
+# The assets directory is the repository root, so without this the whole repo is served,
+# .git included: anyone could fetch /.git/config and rebuild the history. Only the site
+# itself should go up. Keep _headers: Cloudflare reads it from here for the cache and
+# security headers, and never serves it as a file.
+.git
+.github
+.claude
+.gitignore
+.editorconfig
+.assetsignore
+node_modules
+scripts
+README.md
+package.json
+package-lock.json
+netlify.toml
+wrangler.jsonc
