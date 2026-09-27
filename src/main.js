@@ -32,6 +32,7 @@ import { createFireworks } from './scene/fireworks.js';
 
 (async () => {
 'use strict';
+document.documentElement.classList.add('scene-pending');   /* cleared by the first frame; see base.css */
 
 /* ---------- DOM ---------- */
 const $ = (s) => document.querySelector(s);
@@ -1597,7 +1598,7 @@ function frame(now) {
   updateProximity();
   fireworks.resize(ui.canvas.height);
   renderer.render(scene, camera);
-  if (!drawn) { drawn = true; ui.canvas.classList.add('ready'); }
+  if (!drawn) { drawn = true; document.documentElement.classList.remove('scene-pending'); }
   updateLabels();
   updateBubble();
   updateScroll(dt);

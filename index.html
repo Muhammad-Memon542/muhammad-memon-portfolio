@@ -45,27 +45,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;700;800&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
 
 <!-- Styles, in cascade order -->
-<link rel="stylesheet" href="styles/base.css" />
-<link rel="stylesheet" href="styles/hud.css" />
-<link rel="stylesheet" href="styles/overlays.css" />
-<link rel="stylesheet" href="styles/tour.css" />
-<link rel="stylesheet" href="styles/reader.css" />
-<link rel="stylesheet" href="styles/responsive.css" />
+<link rel="stylesheet" href="styles/base.css?v=52fedcce3c" />
+<link rel="stylesheet" href="styles/hud.css?v=72e4e6cf6c" />
+<link rel="stylesheet" href="styles/overlays.css?v=056b537fff" />
+<link rel="stylesheet" href="styles/tour.css?v=e4070fa58f" />
+<link rel="stylesheet" href="styles/reader.css?v=e2ce2d5907" />
+<link rel="stylesheet" href="styles/responsive.css?v=c0f108aac7" />
 
 <!-- Start fetching the renderer and app modules while the document parses. -->
 <link rel="preload" href="vendor/three.min.js" as="script" />
-<link rel="modulepreload" href="src/main.js" />
-<link rel="modulepreload" href="src/content.js" />
-<link rel="modulepreload" href="src/utils.js" />
-<link rel="modulepreload" href="src/scene/primitives.js" />
-<link rel="modulepreload" href="src/scene/water.js" />
-<link rel="modulepreload" href="src/scene/monuments.js" />
-<link rel="modulepreload" href="src/scene/palette.js" />
-<link rel="modulepreload" href="src/scene/flotsam.js" />
-<link rel="modulepreload" href="src/scene/wildlife.js" />
-<link rel="modulepreload" href="src/scene/quality.js" />
-<link rel="modulepreload" href="src/scene/lookout.js" />
-<link rel="modulepreload" href="src/scene/fireworks.js" />
+<!-- The ?v= on every stylesheet and module URL is a content hash written by `npm run stamp`
+     (the import map carries it into the modules' own imports). It stops a browser pairing
+     a cached old file with a new page; `npm run check` fails if the stamps go stale. -->
+<script type="importmap">
+{
+  "imports": {
+    "./src/content.js": "./src/content.js?v=57d865759e",
+    "./src/scene/fireworks.js": "./src/scene/fireworks.js?v=b683fad907",
+    "./src/scene/flotsam.js": "./src/scene/flotsam.js?v=d5e0f18c55",
+    "./src/scene/lookout.js": "./src/scene/lookout.js?v=be33caaea9",
+    "./src/scene/monuments.js": "./src/scene/monuments.js?v=ff26c87838",
+    "./src/scene/palette.js": "./src/scene/palette.js?v=87a59b6108",
+    "./src/scene/primitives.js": "./src/scene/primitives.js?v=69f23490b3",
+    "./src/scene/quality.js": "./src/scene/quality.js?v=88c06790f2",
+    "./src/scene/water.js": "./src/scene/water.js?v=b19fa861a9",
+    "./src/scene/wildlife.js": "./src/scene/wildlife.js?v=0c72c70024",
+    "./src/utils.js": "./src/utils.js?v=104a2f64a1"
+  }
+}
+</script>
+<link rel="modulepreload" href="src/main.js?v=4ea694437c" />
+<link rel="modulepreload" href="src/content.js?v=57d865759e" />
+<link rel="modulepreload" href="src/utils.js?v=104a2f64a1" />
+<link rel="modulepreload" href="src/scene/primitives.js?v=69f23490b3" />
+<link rel="modulepreload" href="src/scene/water.js?v=b19fa861a9" />
+<link rel="modulepreload" href="src/scene/monuments.js?v=ff26c87838" />
+<link rel="modulepreload" href="src/scene/palette.js?v=87a59b6108" />
+<link rel="modulepreload" href="src/scene/flotsam.js?v=d5e0f18c55" />
+<link rel="modulepreload" href="src/scene/wildlife.js?v=0c72c70024" />
+<link rel="modulepreload" href="src/scene/quality.js?v=88c06790f2" />
+<link rel="modulepreload" href="src/scene/lookout.js?v=be33caaea9" />
+<link rel="modulepreload" href="src/scene/fireworks.js?v=b683fad907" />
 
 <script type="application/ld+json">
 {
@@ -223,6 +243,6 @@
 <!-- Three.js r128 (MIT). Classic script: sets the global THREE before the module runs. -->
 <script src="vendor/three.min.js"></script>
 <!-- Application entry point (ES module). -->
-<script type="module" src="src/main.js"></script>
+<script type="module" src="src/main.js?v=4ea694437c"></script>
 </body>
 </html>

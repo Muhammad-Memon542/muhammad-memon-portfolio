@@ -48,7 +48,8 @@ Node's standard library. Any static server works too, e.g. `python3 -m http.serv
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Static dev server on port 5173 (`PORT` or an argument overrides it) |
-| `npm run check` | Health check: JS syntax, broken asset links, manifest, resume, social card |
+| `npm run check` | Health check: JS syntax, broken asset links, stale version stamps, manifest, resume, social card |
+| `npm run stamp` | Stamps content hashes onto the CSS/JS URLs in `index.html`. **Run it after editing anything in `styles/` or `src/`** |
 | `npm run set-site-url <url>` | Bakes your real domain into the canonical/OG/JSON-LD tags, `robots.txt` and `sitemap.xml` |
 | `npm run icons` | Regenerates `og-image.png`, the favicons and PWA icons (needs Python + Pillow) |
 
@@ -156,7 +157,8 @@ The tier approach and the `antialias` rule follow Bruno Simon's
 ## Editing the content
 
 All visitor-facing text lives in [`src/content.js`](src/content.js) — islands, project
-write-ups, the resume, and the bottle notes. Nothing else needs to change.
+write-ups, the resume, and the bottle notes. Nothing else needs to change, apart from
+running `npm run stamp` afterwards (see [Caching](#caching)).
 
 - **Islands** define `pos` (`[x, z]` in world units; the world is ~470 across), `r`
   (radius), `pier` (pier direction in radians) and `kind`, which selects the monument
@@ -209,6 +211,20 @@ resume PDF itself:
 
 Opening either view from inside the site pushes a history entry too, so the Back button
 (or a phone's back swipe) closes it instead of leaving the site.
+
+## Caching
+
+With no build step, file names never change between deploys, and Safari reuses cached ES
+modules even when the headers say to revalidate. After one deploy it paired a stale
+`main.js` with the new stylesheet and returning visitors saw an empty sea until they
+hard-refreshed. So every stylesheet and module URL in `index.html` carries a content hash
+(`styles/base.css?v=52fedcce3c`), and an import map carries the same hashes into the modules'
+own `import`s. A new page can only load the files it was stamped with.
+
+`npm run stamp` rewrites the hashes; `npm run check` (and CI) fails if they're stale. The
+server ignores the query string, so a forgotten stamp never breaks the site; it just stops
+browsers noticing that file changed. Separately, the stylesheet never hides the canvas on
+its own, so even a mismatched script can't leave the scene invisible.
 
 ## How it fits together
 

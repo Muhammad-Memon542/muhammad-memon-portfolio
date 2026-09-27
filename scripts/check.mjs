@@ -3,7 +3,8 @@
  *
  * There's no build step to catch mistakes, so this stands in for one:
  *   1. every .js/.mjs file parses
- *   2. every local asset referenced by index.html actually exists, and every module is preloaded
+ *   2. every local asset referenced by index.html actually exists, every module is
+ *      preloaded, and the ?v= content-hash stamps are current (npm run stamp)
  *   3. the manifest's icons exist
  *   4. the resume filename in content.js matches the PDF that ships in assets/
  *   5. the pre-rendered name/role/tagline in index.html still match content.js
@@ -17,6 +18,7 @@ import { execFile } from 'node:child_process';
 import { join, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { stamped } from './stamp.mjs';
 
 const run = promisify(execFile);
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -72,10 +74,15 @@ if (!missing) ok(`${refs.size} local references resolve`);
 // module importing it has downloaded and parsed, which costs an extra round trip.
 {
   const modules = scripts.map((f) => relative(ROOT, f).split('\\').join('/')).filter((f) => f.startsWith('src/'));
-  const unloaded = modules.filter((m) => !html.includes(`rel="modulepreload" href="${m}"`));
+  const unloaded = modules.filter((m) => !new RegExp(`rel="modulepreload" href="${m.replace(/\./g, '\\.')}(\\?v=[0-9a-f]+)?"`).test(html));
   for (const m of unloaded) bad(`index.html has no <link rel="modulepreload"> for ${m}`);
   if (!unloaded.length) ok(`all ${modules.length} modules in src/ are preloaded`);
 }
+
+// Every stylesheet and module URL carries a content hash (see scripts/stamp.mjs), so a
+// browser can't pair a cached old file with the new page. Stale stamps defeat that.
+if ((await stamped(html)) === html) ok('stylesheet and module URLs are stamped with current content hashes');
+else bad('index.html version stamps are out of date: run `npm run stamp`');
 
 // ------------------------------------------------------------- 3. manifest icons
 console.log('\nWeb app manifest');
