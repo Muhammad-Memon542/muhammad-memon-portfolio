@@ -37,20 +37,20 @@ export const CONTENT = {
       pos: [-78, 52], r: 12, labelY: 14,
       summary: 'Specialist in Statistical Science: Theory and Methods at the University of Toronto, St. George.',
       meta: [['Studying', 'Statistical Science, Specialist'], ['School', 'University of Toronto'], ['Graduating', 'May 2028 (expected)'], ['Based in', 'Toronto']],
-      body: `<p>My coursework covers probability, mathematical statistics, linear algebra, multivariable calculus and computer science. Outside class I work on the applied side: research on energy-efficient model training, AI tools built at hackathons, and a summer with an asset-management team.</p>
+      body: `<p>My coursework covers probability, mathematical statistics, linear algebra, multivariable calculus and computer science. Outside class I work on the applied side: a machine-learning system that forecasts Ontario electricity prices, research on energy-efficient model training, AI tools built at hackathons, and a summer with an asset-management team.</p>
              <p>Away from the keyboard you’ll find me playing chess or badminton, lifting, or gaming.</p>`,
-      tags: ['Python', 'R', 'SQL', 'C++', 'Java', 'JavaScript', 'PyTorch', 'Transformers & LLMs', 'RAG', 'OCR pipelines', 'Docker', 'AWS', 'Google Cloud', 'Git', 'Bloomberg Terminal']
+      tags: ['Python', 'R', 'SQL', 'C++', 'Java', 'JavaScript', 'PyTorch', 'pandas', 'scikit-learn', 'LightGBM', 'statsmodels', 'DuckDB', 'Transformers & LLMs', 'RAG', 'OCR pipelines', 'Docker', 'AWS', 'Google Cloud', 'Git', 'Bloomberg Terminal']
     },
     {
       id: 'gridcast', kind: 'turbine', section: 'work',
-      title: 'GridCast', sub: 'Ontario power-price forecasts', color: '#2a78d6',
+      title: 'GridCast', sub: 'Machine-learning price forecasting', color: '#2a78d6',
       pos: [110, -150], r: 12, labelY: 24,
       cover: '<path d="M14,70 C40,64 56,40 82,44 C108,48 112,20 136,16 C160,12 172,34 188,30 L188,74 C172,80 160,62 136,66 C112,70 108,86 82,84 C56,82 40,96 14,92 Z" fill="currentColor" opacity=".35"/><polyline points="14,81 48,70 82,64 112,46 136,41 162,50 188,52" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g fill="currentColor"><circle cx="82" cy="64" r="6"/><circle cx="136" cy="41" r="6"/></g>',
-      summary: 'Every morning it forecasts tomorrow’s hourly Ontario electricity prices, with an honest range around each one, then scores itself against the real prices.',
-      meta: [['Started', 'October 2026'], ['Forecasts', '24 hourly prices, issued 9:00 a.m. daily'], ['Built with', 'Python, LightGBM, DuckDB']],
-      body: `<p>Ontario redesigned its electricity market on 1 May 2025. GridCast forecasts the next day’s 24 hourly day-ahead prices before the 10:00 a.m. bid deadline, as a full range of outcomes rather than one guess, and keeps a public record of how each forecast turned out.</p>
-             <p>A cloud server collects the grid operator’s public reports every hour. Every model is tested so it only sees data that was public at forecast time, and the research questions were registered before any model saw test data. On held-out months, the best model scored about 26% better than simply reusing yesterday’s prices, and its 90% ranges caught about 90% of actual prices.</p>`,
-      tags: ['Probabilistic forecasting', 'Time series', 'Energy markets'],
+      summary: 'A machine-learning system that predicts tomorrow’s hourly Ontario electricity prices every morning, with a calibrated range around each one, then scores itself against the real prices.',
+      meta: [['Started', 'October 2026'], ['Methods', 'Quantile regression, gradient boosting, time-series analysis'], ['Built with', 'Python, pandas, LightGBM, scikit-learn, statsmodels, DuckDB']],
+      body: `<p>I built the whole pipeline. A Python collector on an Azure Linux server pulls the grid operator’s public market reports every hour, and over 13,000 raw files are parsed and validated into 12 tables with pandas and Pandera, then analysed with DuckDB SQL. From those I engineer point-in-time features (lagged prices, demand, generation, holidays and weather forecasts for eight Ontario cities), with automated tests that stop the model seeing anything published after forecast time.</p>
+             <p>The model is LightGBM gradient-boosted quantile regression, tuned with Optuna and calibrated with conformal prediction, which predicts 21 quantiles for each of the next day’s 24 hours. In a rolling-origin backtest on held-out months it beat LASSO regression (scikit-learn), SARIMAX (statsmodels) and naive baselines: about 26% better than reusing yesterday’s prices, with 90% ranges that caught about 90% of actual prices. A new forecast is published every morning before the 10:00 a.m. bid deadline and scored once real prices are out.</p>`,
+      tags: ['Machine learning', 'Quantile regression', 'Time-series forecasting', 'Data analysis', 'Statistical testing', 'LightGBM', 'scikit-learn', 'pandas', 'DuckDB'],
       links: [
         { label: 'View the project', href: 'https://gridcast.muhammadmemon.ca' },
         { label: 'Source on GitHub', href: 'https://github.com/Muhammad-Memon542/GridCast' }
@@ -192,7 +192,7 @@ export const CONTENT = {
       { id: 'about', line: 'The Cabin: the man himself. Statistical Science at the University of Toronto, graduating in 2028.' },
       { id: 'leadership', line: 'The Observatory! He helps run UTMIST, one of U of T’s biggest AI clubs, and the DeerHacks hackathon.' },
       { id: 'fund-reporting', line: 'A summer at NBP Funds, where his Python scripts cut weekly reporting time by about 70%.' },
-      { id: 'gridcast', line: 'GridCast! Every morning it forecasts tomorrow’s Ontario power prices, then checks itself against the real ones.' },
+      { id: 'gridcast', line: 'GridCast! His machine-learning model predicts tomorrow’s Ontario power prices every morning, then checks itself against the real ones.' },
       { id: 'efficient-ml', line: 'Leaner Models: research on training ML with less energy. About 30% less, in fact.' },
       { id: 'lectra', line: 'Lectra! Built in 24 hours, 2nd of 30+ teams at EmberHacks. Lectures in, accessible notes out.' },
       { id: 'resume', line: 'The Logbook has the whole voyage on one page, with a PDF to take with you.' },
