@@ -496,7 +496,7 @@ function buildIsland(def) {
     rocks.push([Math.cos(a) * d, Math.sin(a) * d, s]);
     b.add(rnd() < 0.5 ? MAT.rock : MAT.rock2, xf(GEO.dodeca, Math.cos(a) * d, 0.4 + rnd() * 0.6, Math.sin(a) * d, rnd() * 3, rnd() * 3, 0, s, s * 0.75, s));
   }
-  const clear = ['cabin', 'observatory', 'tower', 'logbook'].includes(def.kind) ? 0.5 : 0.4;
+  const clear = ['cabin', 'observatory', 'tower', 'logbook', 'turbine'].includes(def.kind) ? 0.5 : 0.4;
   const nTrees = Math.round(r * 0.65);
   for (let i = 0; i < nTrees; i++) {
     const a = rnd() * Math.PI * 2, d = r * (clear + rnd() * (0.72 - clear));
@@ -1128,7 +1128,8 @@ const GLYPH = {
   knot: '<circle cx="-2.2" cy="0" r="4.2"/><circle cx="2.2" cy="0" r="4.2" style="fill:none"/>',
   stack: '<path d="M-4.5,6 L4.5,6 L4.5,1.5 L-4.5,1.5 Z"/><path d="M-3.6,1.5 L3.6,1.5 L3.6,-2.6 L-3.6,-2.6 Z"/><path d="M-2.6,-2.6 L2.6,-2.6 L2.6,-6 L-2.6,-6 Z"/>',
   observatory: '<path d="M-5.5,4.5 L-5.5,0 A5.5,5.5 0 0 1 5.5,0 L5.5,4.5 Z"/><path d="M1,-3.5 L5.5,-7.5"/>',
-  tower: '<path d="M-3.5,6 L0,-6 L3.5,6 Z" style="fill:none"/><circle cx="0" cy="-6.5" r="1.8"/>'
+  tower: '<path d="M-3.5,6 L0,-6 L3.5,6 Z" style="fill:none"/><circle cx="0" cy="-6.5" r="1.8"/>',
+  turbine: '<path d="M-1.1,7 L-0.5,-2 L0.5,-2 L1.1,7 Z"/><path d="M0,-2 L-0.9,-8.5 L0.9,-8.5 Z M0,-2 L6,0.2 L5.2,1.8 Z M0,-2 L-5.2,1.8 L-6,0.2 Z"/>'
 };
 function buildMap() {
   const rhumbs = [];

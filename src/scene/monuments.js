@@ -146,6 +146,31 @@ export function createMonumentBuilders({ animators, beamMaterial, onLantern }) {
         else leaf.visible = false;
       });
     },
+    turbine(g, def) {
+      const H = 15;
+      mesh(new THREE.CylinderGeometry(1.5, 1.9, 0.8, 10), MAT.stone, g, 0, 0.4, 0);
+      mesh(new THREE.CylinderGeometry(0.32, 0.62, H, 10), MAT.cream, g, 0, 0.8 + H / 2, 0);
+      const top = 0.8 + H;
+      mesh(GEO.box, MAT.cream, g, 0, top + 0.35, -0.3).scale.set(1.1, 1.0, 2.6);
+      mesh(new THREE.SphereGeometry(0.22, 8, 6), MAT.redLight, g, 0, top + 0.95, -0.6, false);
+      const rotor = new THREE.Group(); rotor.position.set(0, top + 0.35, 1.15); g.add(rotor);
+      mesh(new THREE.ConeGeometry(0.45, 0.9, 8), MAT.cream, rotor, 0, 0, 0.25).rotation.x = Math.PI / 2;
+      const bladeGeo = new THREE.CylinderGeometry(0.06, 0.34, 6.4, 4);
+      bladeGeo.translate(0, 3.4, 0);
+      for (let i = 0; i < 3; i++) {
+        const blade = mesh(bladeGeo, MAT.cream, rotor);
+        blade.rotation.z = i * 2.094; blade.scale.z = 0.35;
+      }
+      /* the battery the project's dispatch study simulates, in the island's colour */
+      const cell = M(new THREE.Color(def.color), { roughness: 0.55 });
+      mesh(GEO.box, cell, g, 3.3, 0.85, -1.4).scale.set(2.2, 1.7, 3.6);
+      mesh(GEO.box, MAT.dark, g, 3.3, 1.75, -1.4).scale.set(2.3, 0.12, 3.7);
+      for (const z of [-2.6, -1.4, -0.2]) mesh(GEO.box, MAT.dark, g, 2.18, 0.9, z).scale.set(0.06, 1.1, 0.5);
+      animators.push((t) => {
+        rotor.rotation.z = -t * 1.1;
+        MAT.redLight.emissiveIntensity = Math.sin(t * 3) > 0.2 ? 1.3 : 0.25;
+      });
+    },
     tower(g) {
       const b = new Batch(), H = 15, R0 = 1.9, R1 = 0.35, L = 6;
       const leg = (i, h) => { const a = i * 2.094 + 0.5, rr = lerp(R0, R1, h / H); return new THREE.Vector3(Math.cos(a) * rr, h, Math.sin(a) * rr); };
