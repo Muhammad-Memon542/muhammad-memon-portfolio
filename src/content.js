@@ -159,13 +159,12 @@ export const CONTENT = {
         { title: 'Logistics Coordinator', right: 'Sep 2025 – Apr 2026',
           sub: 'Computer Science Student Council, University of Toronto', subRight: 'Toronto, ON',
           bullets: ['Coordinated end-to-end logistics for 12+ technical workshops and community events reaching 400+ students across two terms, delivering event plans and staffing schedules for each.',
-                    'Aligned timelines, approvals, and purchasing across 3 teams (Programming, Finance, Marketing), keeping 95% of events on schedule.'] },
-        { title: 'Founder', right: 'Jun 2024 – Jul 2024',
-          sub: 'CodeCipher (Coding Education Non-Profit)', subRight: 'Toronto, ON',
-          bullets: ['Founded a non-profit teaching coding to 100+ high-school students across 4 schools in its first year.',
-                    'Designed a 3-tier curriculum spanning beginner to advanced; 90% of 80+ participants reported improved coding skills and confidence.'] }
+                    'Aligned timelines, approvals, and purchasing across 3 teams (Programming, Finance, Marketing), keeping 95% of events on schedule.'] }
       ] },
       { title: 'Projects', entries: [
+        { title: 'GridCast — ML Price Forecasting', tech: 'Python, LightGBM, scikit-learn, DuckDB', right: 'Oct 2026 – Present',
+          bullets: ['Built an ML system that forecasts Ontario’s 24 hourly day-ahead electricity prices every morning as calibrated distributions (LightGBM quantile regression, conformal prediction); live at <a href="https://gridcast.muhammadmemon.ca" target="_blank" rel="noopener">gridcast.muhammadmemon.ca</a>.',
+                    'Engineered a leakage-safe pipeline (pandas, Pandera, DuckDB) over 13,000+ market reports on Azure; beat LASSO, SARIMAX and naive baselines in backtests (~26% lower CRPS; 90% intervals cover 89.8%).'] },
         { title: 'Lectra — AI-Powered Lecture Companion', tech: 'Python, Gemini API, OCR', right: '2nd Place, EmberHacks 2025',
           bullets: ['Engineered a multimodal AI pipeline (transcription, OCR, Gemini) converting lecture audio and board images into accessibility-formatted notes with ~92% transcription accuracy.',
                     'Shipped an end-to-end prototype in 24 hours; placed 2nd of 30+ teams for solving a real accessibility gap.'] },
@@ -175,8 +174,9 @@ export const CONTENT = {
       ] },
       { title: 'Technical Skills', rows: [
         ['Languages', 'Python, R, C++, Java, JavaScript, SQL, HTML/CSS'],
-        ['Machine Learning & AI', 'PyTorch, Transformers & LLMs, Retrieval-Augmented Generation (RAG), OCR pipelines'],
-        ['Tools & Cloud', 'Docker, AWS, Google Cloud, Git, Bloomberg Terminal'],
+        ['Machine Learning & AI', 'PyTorch, scikit-learn, LightGBM, Transformers & LLMs, RAG, OCR pipelines'],
+        ['Statistics & Data Analysis', 'Regression, time-series forecasting, hypothesis testing, statsmodels, pandas, DuckDB'],
+        ['Tools & Cloud', 'Docker, AWS, Azure, Google Cloud, Git, Bloomberg Terminal'],
         ['Interests', 'Chess, Badminton, Weightlifting, Video Games']
       ] }
     ]

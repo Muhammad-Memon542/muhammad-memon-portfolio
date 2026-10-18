@@ -17,3 +17,4 @@ package.json
 package-lock.json
 netlify.toml
 wrangler.jsonc
+resume

@@ -1,0 +1,167 @@
+%-------------------------
+% Resume — Muhammad Memon
+% Source of assets/Muhammad_Memon_Resume.pdf (rebuild: see resume/README.md).
+% Keep in step with CONTENT.resume in src/content.js, which shows the same resume on the site.
+% Style adapted from the popular "Jake Gutierrez" sb2nov resume template.
+%-------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-0.55in}
+\addtolength{\textheight}{1.1in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{%
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{%
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small #3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{%
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small #1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+%----------HEADER----------
+\begin{center}
+    \textbf{\Huge \scshape Muhammad Memon} \\ \vspace{2pt}
+    \small
+    \href{mailto:muhammadmemon542@gmail.com}{\underline{muhammadmemon542@gmail.com}} $|$
+    \href{https://www.linkedin.com/in/muhammad-memon22}{\underline{linkedin.com/in/muhammad-memon22}}
+\end{center}
+
+%----------EDUCATION----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University of Toronto, St. George}{Toronto, ON}
+      {Bachelor of Science, Specialist in Statistical Science: Theory and Methods}{Expected May 2028}
+      \resumeItemListStart
+        \resumeItem{\textbf{Relevant Coursework:} Probability, Mathematical Statistics, Linear Algebra, Multivariable Calculus, Computer Science}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%----------EXPERIENCE----------
+\section{Experience \& Leadership}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Finance \& Internal Operations Director}{Sep 2026 -- Present}
+      {University of Toronto Machine Intelligence Student Team (UTMIST)}{Toronto, ON}
+      \resumeItemListStart
+        \resumeItem{Manage the operating budget, financial records, and University funding applications for one of U of T's largest AI/ML student organizations (8 departments, 150+ volunteers).}
+        \resumeItem{Oversee internal operations, including procurement, reimbursements, and cross-department task tracking, to keep flagship initiatives such as an AI conference, hackathons, and 10+ ML project teams on schedule.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Associate}{Sep 2026 -- Present}
+      {DeerHacks Hackathon, UTM Mathematics \& Computational Sciences Society (MCSS)}{Mississauga, ON}
+      \resumeItemListStart
+        \resumeItem{Support the organizing team for DeerHacks, UTM's largest annual hackathon (300+ hackers selected from 600+ applicants over 36 hours), assisting with event logistics, workshops, and sponsor coordination.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Asset Management Intern}{Jun 2026 -- Aug 2026}
+      {NBP Funds (NBP Fund Management Limited)}{}
+      \resumeItemListStart
+        \resumeItem{Supported the investments team with equity research and portfolio analytics across 8 mutual-fund products managing \$120M in AUM using Bloomberg Terminal and Excel.}
+        \resumeItem{Built Python scripts that automated fund-performance reporting, cutting manual reporting time by $\sim$70\% across 5 weekly reports.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Logistics Coordinator}{Sep 2025 -- Apr 2026}
+      {Computer Science Student Council, University of Toronto}{Toronto, ON}
+      \resumeItemListStart
+        \resumeItem{Coordinated end-to-end logistics for 12+ technical workshops and community events reaching 400+ students across two terms, delivering event plans and staffing schedules for each.}
+        \resumeItem{Aligned timelines, approvals, and purchasing across 3 teams (Programming, Finance, Marketing), keeping 95\% of events on schedule.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%----------PROJECTS----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{GridCast --- ML Price Forecasting} $|$ \emph{Python, LightGBM, scikit-learn, DuckDB}}{Oct 2026 -- Present}
+          \resumeItemListStart
+            \resumeItem{Built an ML system that forecasts Ontario's 24 hourly day-ahead electricity prices every morning as calibrated distributions (LightGBM quantile regression, conformal prediction); live at \href{https://gridcast.muhammadmemon.ca}{\underline{gridcast.muhammadmemon.ca}}.}
+            \resumeItem{Engineered a leakage-safe pipeline (pandas, Pandera, DuckDB) over 13,000+ market reports on Azure; beat LASSO, SARIMAX and naive baselines in backtests ($\sim$26\% lower CRPS; 90\% intervals cover 89.8\%).}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Lectra --- AI-Powered Lecture Companion} $|$ \emph{Python, Gemini API, OCR}}{2nd Place, EmberHacks 2025}
+          \resumeItemListStart
+            \resumeItem{Engineered a multimodal AI pipeline (transcription, OCR, Gemini) converting lecture audio and board images into accessibility-formatted notes with $\sim$92\% transcription accuracy.}
+            \resumeItem{Shipped an end-to-end prototype in 24 hours; placed 2nd of 30+ teams for solving a real accessibility gap.}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Energy Efficiency in Machine Learning} $|$ \emph{PyTorch, Quantization, Pruning}}{2025 -- Present}
+          \resumeItemListStart
+            \resumeItem{Benchmarked compute and energy trade-offs across 6 model architectures as a research contributor, identifying configurations that cut training energy by $\sim$30\%.}
+            \resumeItem{Profiled PyTorch training runs and applied quantization and pruning, reducing inference cost by $\sim$40\% with under 2\% accuracy loss.}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+%----------SKILLS----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Python, R, C++, Java, JavaScript, SQL, HTML/CSS} \\
+     \textbf{Machine Learning \& AI}{: PyTorch, scikit-learn, LightGBM, Transformers \& LLMs, RAG, OCR pipelines} \\
+     \textbf{Statistics \& Data Analysis}{: Regression, time-series forecasting, hypothesis testing, statsmodels, pandas, DuckDB} \\
+     \textbf{Tools \& Cloud}{: Docker, AWS, Azure, Google Cloud, Git, Bloomberg Terminal} \\
+     \textbf{Interests}{: Chess, Badminton, Weightlifting, Video Games}
+    }}
+ \end{itemize}
+
+\end{document}
